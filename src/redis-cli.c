@@ -338,7 +338,7 @@ static int cliConnect(int force) {
         }
 
         if (context->err) {
-            fprintf(stderr,"Could not connect to Redis at ");
+            fprintf(stderr,"Could not connect to Redis 3at ");
             if (config.hostsocket == NULL)
                 fprintf(stderr,"%s:%d: %s\n",config.hostip,config.hostport,context->errstr);
             else
@@ -1844,6 +1844,7 @@ static void intrinsicLatencyMode(void) {
  *--------------------------------------------------------------------------- */
 
 int main(int argc, char **argv) {
+    fprintf(stderr, "cli mai running");
     int firstarg;
 
     config.hostip = sdsnew("127.0.0.1");

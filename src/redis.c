@@ -3931,6 +3931,7 @@ void redisSetProcTitle(char *title) {
 }
 
 int main(int argc, char **argv) {
+    fprintf(stderr,"serer main running");
     struct timeval tv;
 
     /* We need to initialize our libraries, and the server configuration. */
