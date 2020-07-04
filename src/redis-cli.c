@@ -1842,9 +1842,9 @@ static void intrinsicLatencyMode(void) {
 /*------------------------------------------------------------------------------
  * Program main()
  *--------------------------------------------------------------------------- */
-
+// 客户端主函数
 int main(int argc, char **argv) {
-    fprintf(stderr, "cli mai running");
+    fprintf(stderr, "cli main running\n");
     int firstarg;
 
     config.hostip = sdsnew("127.0.0.1");
