@@ -2442,6 +2442,7 @@ void call(redisClient *c, int flags) {
     c->cmd->proc(c);
     // 计算命令执行耗费的时间
     duration = ustime()-start;
+    fprintf(stderr, "cmd=%s, used time = %lld", c->cmd->name, duration);
     // 计算命令执行之后的 dirty 值
     dirty = server.dirty-dirty;
 
