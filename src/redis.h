@@ -1344,7 +1344,7 @@ struct redisCommand {
     // 命令名字
     char *name;
 
-    // 实现函数
+    // 命令实现函数的指针
     redisCommandProc *proc;
 
     // 参数个数

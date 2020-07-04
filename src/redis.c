@@ -177,7 +177,7 @@ struct redisCommand *commandTable;
  *    为这个命令执行一个显式的 ASKING ，
  *    使得在集群模式下，一个被标示为 importing 的槽可以接收这命令。
  */
-struct redisCommand redisCommandTable[] = {
+struct redisCommand redisCommandTable[] = {     //redis 支持的命令表, 以及函数指针映射
     {"get",getCommand,2,"r",0,NULL,1,1,1,0,0},
     {"set",setCommand,-3,"wm",0,NULL,1,1,1,0,0},
     {"setnx",setnxCommand,3,"wm",0,NULL,1,1,1,0,0},
@@ -1978,6 +1978,7 @@ void adjustOpenFilesLimit(void) {
  * impossible to bind, or no bind addresses were specified in the server
  * configuration but the function is not able to bind * for at least
  * one of the IPv4 or IPv6 protocols. */
+// 启动 tcp 服务器
 int listenToPort(int port, int *fds, int *count) {
     int j;
 
@@ -2081,7 +2082,7 @@ void initServer() {
     server.db = zmalloc(sizeof(redisDb)*server.dbnum);
 
     /* Open the TCP listening socket for the user commands. */
-    // 打开 TCP 监听端口，用于等待客户端的命令请求
+    // listenToPort 启动服务器 打开 TCP 监听端口，用于等待客户端的命令请求
     if (server.port != 0 &&
         listenToPort(server.port,server.ipfd,&server.ipfd_count) == REDIS_ERR)
         exit(1);
@@ -2437,10 +2438,11 @@ void call(redisClient *c, int flags) {
     dirty = server.dirty;
     // 计算命令开始执行的时间
     start = ustime();
-    // 执行实现函数
+    // 执行命令具体实现函数
     c->cmd->proc(c);
     // 计算命令执行耗费的时间
     duration = ustime()-start;
+    fprintf(stderr, "cmd=%s, used time = %lld", c->cmd->name, duration);
     // 计算命令执行之后的 dirty 值
     dirty = server.dirty-dirty;
 
@@ -3930,8 +3932,9 @@ void redisSetProcTitle(char *title) {
 #endif
 }
 
+//主函数
 int main(int argc, char **argv) {
-    fprintf(stderr,"serer main running");
+    fprintf(stderr,"serer main running\n");
     struct timeval tv;
 
     /* We need to initialize our libraries, and the server configuration. */
@@ -4028,6 +4031,7 @@ int main(int argc, char **argv) {
     if (server.daemonize) daemonize();
 
     // 创建并初始化服务器数据结构
+    // 启动 tcp服务器
     initServer();
 
     // 如果服务器是守护进程，那么创建 PID 文件
