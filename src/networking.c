@@ -1628,7 +1628,7 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
 
     // 从查询缓存重读取内容，创建参数，并执行命令
     // 函数会执行到缓存中的所有内容都被处理完为止
-    processInputBuffer(c);
+    processInputBuffer(c);  //处理输入
 
     server.current_client = NULL;
 }

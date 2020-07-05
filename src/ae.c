@@ -495,6 +495,7 @@ static int processTimeEvents(aeEventLoop *eventLoop) {
  * The function returns the number of events processed. 
  * 函数的返回值为已处理事件的数量
  */
+// 处理事件
 int aeProcessEvents(aeEventLoop *eventLoop, int flags)
 {
     int processed = 0, numevents;
@@ -573,7 +574,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
             if (fe->mask & mask & AE_READABLE) {
                 // rfired 确保读/写事件只能执行其中一个
                 rfired = 1;
-                fe->rfileProc(eventLoop,fd,fe->clientData,mask);
+                fe->rfileProc(eventLoop,fd,fe->clientData,mask);  //readQueryFromClient()
             }
             // 写事件
             if (fe->mask & mask & AE_WRITABLE) {

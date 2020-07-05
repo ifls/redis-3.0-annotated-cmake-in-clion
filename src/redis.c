@@ -4081,6 +4081,7 @@ int main(int argc, char **argv) {
 
     // 运行事件处理器，一直到服务器关闭为止
     aeSetBeforeSleepProc(server.el,beforeSleep);
+    // 事件主循环
     aeMain(server.el);
 
     // 服务器关闭，停止事件循环
