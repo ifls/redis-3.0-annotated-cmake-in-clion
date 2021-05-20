@@ -110,8 +110,7 @@ static int zmalloc_thread_safe = 0;
 pthread_mutex_t used_memory_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void zmalloc_default_oom(size_t size) {
-    fprintf(stderr, "zmalloc: Out of memory trying to allocate %zu bytes\n",
-        size);
+    fprintf(stderr, "zmalloc: Out of memory trying to allocate %zu bytes\n", size);
     fflush(stderr);
     abort();
 }
@@ -119,30 +118,30 @@ static void zmalloc_default_oom(size_t size) {
 static void (*zmalloc_oom_handler)(size_t) = zmalloc_default_oom;
 
 void *zmalloc(size_t size) {
-    void *ptr = malloc(size+PREFIX_SIZE);
+    void *ptr = malloc(size + PREFIX_SIZE);
 
     if (!ptr) zmalloc_oom_handler(size);
 #ifdef HAVE_MALLOC_SIZE
     update_zmalloc_stat_alloc(zmalloc_size(ptr));
     return ptr;
 #else
-    *((size_t*)ptr) = size;
-    update_zmalloc_stat_alloc(size+PREFIX_SIZE);
-    return (char*)ptr+PREFIX_SIZE;
+    *((size_t *) ptr) = size;
+    update_zmalloc_stat_alloc(size + PREFIX_SIZE);
+    return (char *) ptr + PREFIX_SIZE;
 #endif
 }
 
 void *zcalloc(size_t size) {
-    void *ptr = calloc(1, size+PREFIX_SIZE);
+    void *ptr = calloc(1, size + PREFIX_SIZE);
 
     if (!ptr) zmalloc_oom_handler(size);
 #ifdef HAVE_MALLOC_SIZE
     update_zmalloc_stat_alloc(zmalloc_size(ptr));
     return ptr;
 #else
-    *((size_t*)ptr) = size;
-    update_zmalloc_stat_alloc(size+PREFIX_SIZE);
-    return (char*)ptr+PREFIX_SIZE;
+    *((size_t *) ptr) = size;
+    update_zmalloc_stat_alloc(size + PREFIX_SIZE);
+    return (char *) ptr + PREFIX_SIZE;
 #endif
 }
 
@@ -163,15 +162,15 @@ void *zrealloc(void *ptr, size_t size) {
     update_zmalloc_stat_alloc(zmalloc_size(newptr));
     return newptr;
 #else
-    realptr = (char*)ptr-PREFIX_SIZE;
-    oldsize = *((size_t*)realptr);
-    newptr = realloc(realptr,size+PREFIX_SIZE);
+    realptr = (char *) ptr - PREFIX_SIZE;
+    oldsize = *((size_t *) realptr);
+    newptr = realloc(realptr, size + PREFIX_SIZE);
     if (!newptr) zmalloc_oom_handler(size);
 
-    *((size_t*)newptr) = size;
+    *((size_t *) newptr) = size;
     update_zmalloc_stat_free(oldsize);
     update_zmalloc_stat_alloc(size);
-    return (char*)newptr+PREFIX_SIZE;
+    return (char *) newptr + PREFIX_SIZE;
 #endif
 }
 
@@ -179,14 +178,16 @@ void *zrealloc(void *ptr, size_t size) {
  * malloc itself, given that in that case we store a header with this
  * information as the first bytes of every allocation. */
 #ifndef HAVE_MALLOC_SIZE
+
 size_t zmalloc_size(void *ptr) {
-    void *realptr = (char*)ptr-PREFIX_SIZE;
-    size_t size = *((size_t*)realptr);
+    void *realptr = (char *) ptr - PREFIX_SIZE;
+    size_t size = *((size_t *) realptr);
     /* Assume at least that all the allocations are padded at sizeof(long) by
      * the underlying allocator. */
-    if (size&(sizeof(long)-1)) size += sizeof(long)-(size&(sizeof(long)-1));
-    return size+PREFIX_SIZE;
+    if (size & (sizeof(long) - 1)) size += sizeof(long) - (size & (sizeof(long) - 1));
+    return size + PREFIX_SIZE;
 }
+
 #endif
 
 void zfree(void *ptr) {
@@ -200,18 +201,19 @@ void zfree(void *ptr) {
     update_zmalloc_stat_free(zmalloc_size(ptr));
     free(ptr);
 #else
-    realptr = (char*)ptr-PREFIX_SIZE;
-    oldsize = *((size_t*)realptr);
-    update_zmalloc_stat_free(oldsize+PREFIX_SIZE);
+    realptr = (char *) ptr - PREFIX_SIZE;
+    oldsize = *((size_t *) realptr);
+    update_zmalloc_stat_free(oldsize + PREFIX_SIZE);
     free(realptr);
 #endif
 }
 
+// 字符串拷贝
 char *zstrdup(const char *s) {
-    size_t l = strlen(s)+1;
+    size_t l = strlen(s) + 1;
     char *p = zmalloc(l);
 
-    memcpy(p,s,l);
+    memcpy(p, s, l);
     return p;
 }
 
@@ -226,8 +228,7 @@ size_t zmalloc_used_memory(void) {
         um = used_memory;
         pthread_mutex_unlock(&used_memory_mutex);
 #endif
-    }
-    else {
+    } else {
         um = used_memory;
     }
 
@@ -310,6 +311,7 @@ size_t zmalloc_get_rss(void) {
     return t_info.resident_size;
 }
 #else
+
 size_t zmalloc_get_rss(void) {
     /* If we can't get the RSS in an OS-specific way for this system just
      * return the memory usage we estimated in zmalloc()..
@@ -318,11 +320,12 @@ size_t zmalloc_get_rss(void) {
      * of course... */
     return zmalloc_used_memory();
 }
+
 #endif
 
 /* Fragmentation = RSS / allocated-bytes */
 float zmalloc_get_fragmentation_ratio(size_t rss) {
-    return (float)rss/zmalloc_used_memory();
+    return (float) rss / zmalloc_used_memory();
 }
 
 #if defined(HAVE_PROC_SMAPS)
@@ -345,7 +348,9 @@ size_t zmalloc_get_private_dirty(void) {
     return pd;
 }
 #else
+
 size_t zmalloc_get_private_dirty(void) {
     return 0;
 }
+
 #endif
