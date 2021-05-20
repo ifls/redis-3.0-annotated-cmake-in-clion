@@ -42,7 +42,7 @@ static int aeApiCreate(aeEventLoop *eventLoop) {
     aeApiState *state = zmalloc(sizeof(aeApiState));
 
     if (!state) return -1;
-    state->events = zmalloc(sizeof(struct kevent)*eventLoop->setsize);
+    state->events = zmalloc(sizeof(struct kevent) * eventLoop->setsize);
     if (!state->events) {
         zfree(state);
         return -1;
@@ -54,13 +54,13 @@ static int aeApiCreate(aeEventLoop *eventLoop) {
         return -1;
     }
     eventLoop->apidata = state;
-    return 0;    
+    return 0;
 }
 
 static int aeApiResize(aeEventLoop *eventLoop, int setsize) {
     aeApiState *state = eventLoop->apidata;
 
-    state->events = zrealloc(state->events, sizeof(struct kevent)*setsize);
+    state->events = zrealloc(state->events, sizeof(struct kevent) * setsize);
     return 0;
 }
 
@@ -75,7 +75,7 @@ static void aeApiFree(aeEventLoop *eventLoop) {
 static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {
     aeApiState *state = eventLoop->apidata;
     struct kevent ke;
-    
+
     if (mask & AE_READABLE) {
         EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
         if (kevent(state->kqfd, &ke, 1, NULL, 0, NULL) == -1) return -1;
@@ -109,25 +109,23 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
         struct timespec timeout;
         timeout.tv_sec = tvp->tv_sec;
         timeout.tv_nsec = tvp->tv_usec * 1000;
-        retval = kevent(state->kqfd, NULL, 0, state->events, eventLoop->setsize,
-                        &timeout);
+        retval = kevent(state->kqfd, NULL, 0, state->events, eventLoop->setsize, &timeout);
     } else {
-        retval = kevent(state->kqfd, NULL, 0, state->events, eventLoop->setsize,
-                        NULL);
+        retval = kevent(state->kqfd, NULL, 0, state->events, eventLoop->setsize, NULL);
     }
 
     if (retval > 0) {
         int j;
-        
+
         numevents = retval;
-        for(j = 0; j < numevents; j++) {
+        for (j = 0; j < numevents; j++) {
             int mask = 0;
-            struct kevent *e = state->events+j;
-            
+            struct kevent *e = state->events + j;
+
             if (e->filter == EVFILT_READ) mask |= AE_READABLE;
             if (e->filter == EVFILT_WRITE) mask |= AE_WRITABLE;
-            eventLoop->fired[j].fd = e->ident; 
-            eventLoop->fired[j].mask = mask;           
+            eventLoop->fired[j].fd = e->ident;
+            eventLoop->fired[j].mask = mask;
         }
     }
     return numevents;

@@ -2,9 +2,9 @@
 
 ## 背景
 
-`CLion`使用`CMake`来管理编译，而redis源码本身使用`make`，因此直接将redis源码导入`CLion`无法直接运行，需要配置`CMake`。
+`CLion`使用`CMake`来管理编译,而redis源码本身使用`make`,因此直接将redis源码导入`CLion`无法直接运行,需要配置`CMake`。
 
-由于学习过程中参考的书籍为[《Redis 设计与实现》](http://redisbook.com/)，因此源码版本也跟本书保持一致。
+由于学习过程中参考的书籍为[《Redis 设计与实现》](http://redisbook.com/),因此源码版本也跟本书保持一致。
 
 ## 步骤
 
@@ -181,12 +181,12 @@ link_directories(deps/hiredis/ deps/linenoise/ diredeps/lua/src)
 
 ##### 6. 导入CLion
 
-将项目导入CLion，导入时选择不覆盖已有的CMakeLists.txt。
+将项目导入CLion,导入时选择不覆盖已有的CMakeLists.txt。
 
 ##### 7. 运行
 
-在CLion中选择`redis-server`，选择运行/调试，即可成功运行。
+在CLion中选择`redis-server`,选择运行/调试,即可成功运行。
 
 ## 源码地址
 
-`https://github.com/htw0056/redis-3.0-annotated-cmake-in-clion`，clone该项目导入CLion即可直接运行。
+`https://github.com/htw0056/redis-3.0-annotated-cmake-in-clion`,clone该项目导入CLion即可直接运行。

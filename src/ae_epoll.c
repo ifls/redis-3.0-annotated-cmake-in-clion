@@ -35,17 +35,15 @@
  * 事件状态
  */
 typedef struct aeApiState {
-
     // epoll_event 实例描述符
     int epfd;
 
     // 事件槽
     struct epoll_event *events;
-
 } aeApiState;
 
 /*
- * 创建一个新的 epoll 实例，并将它赋值给 eventLoop
+ * 创建一个新的 epoll 实例,并将它赋值给 eventLoop
  */
 static int aeApiCreate(aeEventLoop *eventLoop) {
 
@@ -54,7 +52,7 @@ static int aeApiCreate(aeEventLoop *eventLoop) {
     if (!state) return -1;
 
     // 初始化事件槽空间
-    state->events = zmalloc(sizeof(struct epoll_event)*eventLoop->setsize);
+    state->events = zmalloc(sizeof(struct epoll_event) * eventLoop->setsize);
     if (!state->events) {
         zfree(state);
         return -1;
@@ -79,7 +77,7 @@ static int aeApiCreate(aeEventLoop *eventLoop) {
 static int aeApiResize(aeEventLoop *eventLoop, int setsize) {
     aeApiState *state = eventLoop->apidata;
 
-    state->events = zrealloc(state->events, sizeof(struct epoll_event)*setsize);
+    state->events = zrealloc(state->events, sizeof(struct epoll_event) * setsize);
     return 0;
 }
 
@@ -104,12 +102,11 @@ static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {
     /* If the fd was already monitored for some event, we need a MOD
      * operation. Otherwise we need an ADD operation. 
      *
-     * 如果 fd 没有关联任何事件，那么这是一个 ADD 操作。
+     * 如果 fd 没有关联任何事件,那么这是一个 ADD 操作.
      *
-     * 如果已经关联了某个/某些事件，那么这是一个 MOD 操作。
+     * 如果已经关联了某个/某些事件,那么这是一个 MOD 操作.
      */
-    int op = eventLoop->events[fd].mask == AE_NONE ?
-            EPOLL_CTL_ADD : EPOLL_CTL_MOD;
+    int op = eventLoop->events[fd].mask == AE_NONE ? EPOLL_CTL_ADD : EPOLL_CTL_MOD;
 
     // 注册事件到 epoll
     ee.events = 0;
@@ -119,7 +116,7 @@ static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {
     ee.data.u64 = 0; /* avoid valgrind warning */
     ee.data.fd = fd;
 
-    if (epoll_ctl(state->epfd,op,fd,&ee) == -1) return -1;
+    if (epoll_ctl(state->epfd, op, fd, &ee) == -1) return -1;
 
     return 0;
 }
@@ -139,11 +136,11 @@ static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int delmask) {
     ee.data.u64 = 0; /* avoid valgrind warning */
     ee.data.fd = fd;
     if (mask != AE_NONE) {
-        epoll_ctl(state->epfd,EPOLL_CTL_MOD,fd,&ee);
+        epoll_ctl(state->epfd, EPOLL_CTL_MOD, fd, &ee);
     } else {
         /* Note, Kernel < 2.6.9 requires a non null event pointer even for
          * EPOLL_CTL_DEL. */
-        epoll_ctl(state->epfd,EPOLL_CTL_DEL,fd,&ee);
+        epoll_ctl(state->epfd, EPOLL_CTL_DEL, fd, &ee);
     }
 }
 
@@ -155,8 +152,8 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
     int retval, numevents = 0;
 
     // 等待时间
-    retval = epoll_wait(state->epfd,state->events,eventLoop->setsize,
-            tvp ? (tvp->tv_sec*1000 + tvp->tv_usec/1000) : -1);
+    retval = epoll_wait(state->epfd, state->events, eventLoop->setsize,
+                        tvp ? (tvp->tv_sec * 1000 + tvp->tv_usec / 1000) : -1);
 
     // 有至少一个事件就绪？
     if (retval > 0) {
@@ -167,7 +164,7 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
         numevents = retval;
         for (j = 0; j < numevents; j++) {
             int mask = 0;
-            struct epoll_event *e = state->events+j;
+            struct epoll_event *e = state->events + j;
 
             if (e->events & EPOLLIN) mask |= AE_READABLE;
             if (e->events & EPOLLOUT) mask |= AE_WRITABLE;
@@ -178,7 +175,7 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
             eventLoop->fired[j].mask = mask;
         }
     }
-    
+
     // 返回已就绪事件个数
     return numevents;
 }
