@@ -560,7 +560,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
             /* note the fe->mask & mask & ... code: maybe an already processed
               * event removed an element that fired and we still didn't
               * processed, so we check if the event is still valid. */
-            // 读事件
+            // 先处理, 读事件
             if (fe->mask & mask & AE_READABLE) {
                 // rfired 确保读/写事件只能执行其中一个
                 rfired = 1;

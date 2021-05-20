@@ -51,7 +51,7 @@ static int aeApiCreate(aeEventLoop *eventLoop) {
 
     if (!state) return -1;
 
-    // 初始化事件槽空间
+    // 初始化事件槽内存
     state->events = zmalloc(sizeof(struct epoll_event) * eventLoop->setsize);
     if (!state->events) {
         zfree(state);
@@ -145,13 +145,13 @@ static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int delmask) {
 }
 
 /*
- * 获取可执行事件
+ * 获取可执行事件 // 返回已就绪事件个数
  */
 static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
     aeApiState *state = eventLoop->apidata;
     int retval, numevents = 0;
 
-    // 等待时间
+    // 等待时间, 转换为毫秒
     retval = epoll_wait(state->epfd, state->events, eventLoop->setsize,
                         tvp ? (tvp->tv_sec * 1000 + tvp->tv_usec / 1000) : -1);
 
