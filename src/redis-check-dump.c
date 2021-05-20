@@ -128,7 +128,7 @@ static errors_t errors;
 
 /* Data type to hold opcode with optional key name an success status */
 typedef struct {
-    char* key;
+    char *key;
     int type;
     char success;
 } entry;
@@ -145,10 +145,7 @@ static char types[256][16];
 int checkType(unsigned char t) {
     /* In case a new object type is added, update the following 
      * condition as necessary. */
-    return
-        (t >= REDIS_HASH_ZIPMAP && t <= REDIS_HASH_ZIPLIST) ||
-        t <= REDIS_HASH ||
-        t >= REDIS_EXPIRETIME_MS;
+    return (t >= REDIS_HASH_ZIPMAP && t <= REDIS_HASH_ZIPLIST) || t <= REDIS_HASH || t >= REDIS_EXPIRETIME_MS;
 }
 
 /* when number of bytes to read is negative, do a peek */
@@ -160,7 +157,7 @@ int readBytes(void *target, long num) {
     if (p.offset + num > p.size) {
         return 0;
     } else {
-        memcpy(target, (void*)((size_t)p.data + p.offset), num);
+        memcpy(target, (void *) ((size_t) p.data + p.offset), num);
         if (!peek) positions[level].offset += num;
     }
     return 1;
@@ -175,11 +172,11 @@ int processHeader() {
     }
 
     /* expect the first 5 bytes to equal REDIS */
-    if (memcmp(buf,"REDIS",5) != 0) {
+    if (memcmp(buf, "REDIS", 5) != 0) {
         ERROR("Wrong signature in header\n");
     }
 
-    dump_version = (int)strtol(buf + 5, NULL, 10);
+    dump_version = (int) strtol(buf + 5, NULL, 10);
     if (dump_version < 1 || dump_version > 6) {
         ERROR("Unknown RDB format version: %d\n", dump_version);
     }
@@ -219,7 +216,7 @@ int processTime(int type) {
     unsigned char t[8];
     int timelen = (type == REDIS_EXPIRETIME_MS) ? 8 : 4;
 
-    if (readBytes(t,timelen)) {
+    if (readBytes(t, timelen)) {
         return 1;
     } else {
         SHIFT_ERROR(offset, "Could not read time");
@@ -246,12 +243,12 @@ uint32_t loadLength(int *isencoded) {
         return buf[0] & 0x3F;
     } else if (type == REDIS_RDB_14BITLEN) {
         /* Read a 14 bit len */
-        if (!readBytes(buf+1,1)) return REDIS_RDB_LENERR;
+        if (!readBytes(buf + 1, 1)) return REDIS_RDB_LENERR;
         return ((buf[0] & 0x3F) << 8) | buf[1];
     } else {
         /* Read a 32 bit len */
         if (!readBytes(&len, 4)) return REDIS_RDB_LENERR;
-        return (unsigned int)ntohl(len);
+        return (unsigned int) ntohl(len);
     }
 }
 
@@ -264,17 +261,17 @@ char *loadIntegerObject(int enctype) {
         uint8_t v;
         if (!readBytes(enc, 1)) return NULL;
         v = enc[0];
-        val = (int8_t)v;
+        val = (int8_t) v;
     } else if (enctype == REDIS_RDB_ENC_INT16) {
         uint16_t v;
         if (!readBytes(enc, 2)) return NULL;
-        v = enc[0]|(enc[1]<<8);
-        val = (int16_t)v;
+        v = enc[0] | (enc[1] << 8);
+        val = (int16_t) v;
     } else if (enctype == REDIS_RDB_ENC_INT32) {
         uint32_t v;
         if (!readBytes(enc, 4)) return NULL;
-        v = enc[0]|(enc[1]<<8)|(enc[2]<<16)|(enc[3]<<24);
-        val = (int32_t)v;
+        v = enc[0] | (enc[1] << 8) | (enc[2] << 16) | (enc[3] << 24);
+        val = (int32_t) v;
     } else {
         SHIFT_ERROR(offset, "Unknown integer encoding (0x%02x)", enctype);
         return NULL;
@@ -287,7 +284,7 @@ char *loadIntegerObject(int enctype) {
     return buf;
 }
 
-char* loadLzfStringObject() {
+char *loadLzfStringObject() {
     unsigned int slen, clen;
     char *c, *s;
 
@@ -300,9 +297,10 @@ char* loadLzfStringObject() {
         return NULL;
     }
 
-    s = malloc(slen+1);
-    if (lzf_decompress(c,clen,s,slen) == 0) {
-        free(c); free(s);
+    s = malloc(slen + 1);
+    if (lzf_decompress(c, clen, s, slen) == 0) {
+        free(c);
+        free(s);
         return NULL;
     }
 
@@ -311,30 +309,30 @@ char* loadLzfStringObject() {
 }
 
 /* returns NULL when not processable, char* when valid */
-char* loadStringObject() {
+char *loadStringObject() {
     uint32_t offset = CURR_OFFSET;
     int isencoded;
     uint32_t len;
 
     len = loadLength(&isencoded);
     if (isencoded) {
-        switch(len) {
-        case REDIS_RDB_ENC_INT8:
-        case REDIS_RDB_ENC_INT16:
-        case REDIS_RDB_ENC_INT32:
-            return loadIntegerObject(len);
-        case REDIS_RDB_ENC_LZF:
-            return loadLzfStringObject();
-        default:
-            /* unknown encoding */
+        switch (len) {
+            case REDIS_RDB_ENC_INT8:
+            case REDIS_RDB_ENC_INT16:
+            case REDIS_RDB_ENC_INT32:
+                return loadIntegerObject(len);
+            case REDIS_RDB_ENC_LZF:
+                return loadLzfStringObject();
+            default:
+                /* unknown encoding */
             SHIFT_ERROR(offset, "Unknown string encoding (0x%02x)", len);
-            return NULL;
+                return NULL;
         }
     }
 
     if (len == REDIS_RDB_LENERR) return NULL;
 
-    char *buf = malloc(sizeof(char) * (len+1));
+    char *buf = malloc(sizeof(char) * (len + 1));
     buf[len] = '\0';
     if (!readBytes(buf, len)) {
         free(buf);
@@ -343,7 +341,7 @@ char* loadStringObject() {
     return buf;
 }
 
-int processStringObject(char** store) {
+int processStringObject(char **store) {
     unsigned long offset = CURR_OFFSET;
     char *key = loadStringObject();
     if (key == NULL) {
@@ -360,30 +358,36 @@ int processStringObject(char** store) {
     return 1;
 }
 
-double* loadDoubleValue() {
+double *loadDoubleValue() {
     char buf[256];
     unsigned char len;
-    double* val;
+    double *val;
 
-    if (!readBytes(&len,1)) return NULL;
+    if (!readBytes(&len, 1)) return NULL;
 
     val = malloc(sizeof(double));
-    switch(len) {
-    case 255: *val = R_NegInf;  return val;
-    case 254: *val = R_PosInf;  return val;
-    case 253: *val = R_Nan;     return val;
-    default:
-        if (!readBytes(buf, len)) {
-            free(val);
-            return NULL;
-        }
-        buf[len] = '\0';
-        sscanf(buf, "%lg", val);
-        return val;
+    switch (len) {
+        case 255:
+            *val = R_NegInf;
+            return val;
+        case 254:
+            *val = R_PosInf;
+            return val;
+        case 253:
+            *val = R_Nan;
+            return val;
+        default:
+            if (!readBytes(buf, len)) {
+                free(val);
+                return NULL;
+            }
+            buf[len] = '\0';
+            sscanf(buf, "%lg", val);
+            return val;
     }
 }
 
-int processDoubleValue(double** store) {
+int processDoubleValue(double **store) {
     unsigned long offset = CURR_OFFSET;
     double *val = loadDoubleValue();
     if (val == NULL) {
@@ -414,69 +418,65 @@ int loadPair(entry *e) {
     }
 
     uint32_t length = 0;
-    if (e->type == REDIS_LIST ||
-        e->type == REDIS_SET  ||
-        e->type == REDIS_ZSET ||
-        e->type == REDIS_HASH) {
+    if (e->type == REDIS_LIST || e->type == REDIS_SET || e->type == REDIS_ZSET || e->type == REDIS_HASH) {
         if ((length = loadLength(NULL)) == REDIS_RDB_LENERR) {
             SHIFT_ERROR(offset, "Error reading %s length", types[e->type]);
             return 0;
         }
     }
 
-    switch(e->type) {
-    case REDIS_STRING:
-    case REDIS_HASH_ZIPMAP:
-    case REDIS_LIST_ZIPLIST:
-    case REDIS_SET_INTSET:
-    case REDIS_ZSET_ZIPLIST:
-    case REDIS_HASH_ZIPLIST:
-        if (!processStringObject(NULL)) {
-            SHIFT_ERROR(offset, "Error reading entry value");
+    switch (e->type) {
+        case REDIS_STRING:
+        case REDIS_HASH_ZIPMAP:
+        case REDIS_LIST_ZIPLIST:
+        case REDIS_SET_INTSET:
+        case REDIS_ZSET_ZIPLIST:
+        case REDIS_HASH_ZIPLIST:
+            if (!processStringObject(NULL)) {
+                SHIFT_ERROR(offset, "Error reading entry value");
+                return 0;
+            }
+            break;
+        case REDIS_LIST:
+        case REDIS_SET:
+            for (i = 0; i < length; i++) {
+                offset = CURR_OFFSET;
+                if (!processStringObject(NULL)) {
+                    SHIFT_ERROR(offset, "Error reading element at index %d (length: %d)", i, length);
+                    return 0;
+                }
+            }
+            break;
+        case REDIS_ZSET:
+            for (i = 0; i < length; i++) {
+                offset = CURR_OFFSET;
+                if (!processStringObject(NULL)) {
+                    SHIFT_ERROR(offset, "Error reading element key at index %d (length: %d)", i, length);
+                    return 0;
+                }
+                offset = CURR_OFFSET;
+                if (!processDoubleValue(NULL)) {
+                    SHIFT_ERROR(offset, "Error reading element value at index %d (length: %d)", i, length);
+                    return 0;
+                }
+            }
+            break;
+        case REDIS_HASH:
+            for (i = 0; i < length; i++) {
+                offset = CURR_OFFSET;
+                if (!processStringObject(NULL)) {
+                    SHIFT_ERROR(offset, "Error reading element key at index %d (length: %d)", i, length);
+                    return 0;
+                }
+                offset = CURR_OFFSET;
+                if (!processStringObject(NULL)) {
+                    SHIFT_ERROR(offset, "Error reading element value at index %d (length: %d)", i, length);
+                    return 0;
+                }
+            }
+            break;
+        default: SHIFT_ERROR(offset, "Type not implemented");
             return 0;
-        }
-    break;
-    case REDIS_LIST:
-    case REDIS_SET:
-        for (i = 0; i < length; i++) {
-            offset = CURR_OFFSET;
-            if (!processStringObject(NULL)) {
-                SHIFT_ERROR(offset, "Error reading element at index %d (length: %d)", i, length);
-                return 0;
-            }
-        }
-    break;
-    case REDIS_ZSET:
-        for (i = 0; i < length; i++) {
-            offset = CURR_OFFSET;
-            if (!processStringObject(NULL)) {
-                SHIFT_ERROR(offset, "Error reading element key at index %d (length: %d)", i, length);
-                return 0;
-            }
-            offset = CURR_OFFSET;
-            if (!processDoubleValue(NULL)) {
-                SHIFT_ERROR(offset, "Error reading element value at index %d (length: %d)", i, length);
-                return 0;
-            }
-        }
-    break;
-    case REDIS_HASH:
-        for (i = 0; i < length; i++) {
-            offset = CURR_OFFSET;
-            if (!processStringObject(NULL)) {
-                SHIFT_ERROR(offset, "Error reading element key at index %d (length: %d)", i, length);
-                return 0;
-            }
-            offset = CURR_OFFSET;
-            if (!processStringObject(NULL)) {
-                SHIFT_ERROR(offset, "Error reading element value at index %d (length: %d)", i, length);
-                return 0;
-            }
-        }
-    break;
-    default:
-        SHIFT_ERROR(offset, "Type not implemented");
-        return 0;
     }
     /* because we're done, we assume success */
     e->success = 1;
@@ -484,7 +484,7 @@ int loadPair(entry *e) {
 }
 
 entry loadEntry() {
-    entry e = { NULL, -1, 0 };
+    entry e = {NULL, -1, 0};
     uint32_t length, offset[4];
 
     /* reset error container */
@@ -514,8 +514,7 @@ entry loadEntry() {
         return e;
     } else {
         /* optionally consume expire */
-        if (e.type == REDIS_EXPIRETIME || 
-            e.type == REDIS_EXPIRETIME_MS) {
+        if (e.type == REDIS_EXPIRETIME || e.type == REDIS_EXPIRETIME_MS) {
             if (!processTime(e.type)) return e;
             if (!loadType(&e)) return e;
         }
@@ -541,7 +540,7 @@ entry loadEntry() {
     return e;
 }
 
-void printCentered(int indent, int width, char* body) {
+void printCentered(int indent, int width, char *body) {
     char head[256], tail[256];
     memset(head, '\0', 256);
     memset(tail, '\0', 256);
@@ -553,15 +552,13 @@ void printCentered(int indent, int width, char* body) {
 
 void printValid(uint64_t ops, uint64_t bytes) {
     char body[80];
-    sprintf(body, "Processed %llu valid opcodes (in %llu bytes)",
-        (unsigned long long) ops, (unsigned long long) bytes);
+    sprintf(body, "Processed %llu valid opcodes (in %llu bytes)", (unsigned long long) ops, (unsigned long long) bytes);
     printCentered(4, 80, body);
 }
 
 void printSkipped(uint64_t bytes, uint64_t offset) {
     char body[80];
-    sprintf(body, "Skipped %llu bytes (resuming at 0x%08llx)",
-        (unsigned long long) bytes, (unsigned long long) offset);
+    sprintf(body, "Skipped %llu bytes (resuming at 0x%08llx)", (unsigned long long) bytes, (unsigned long long) offset);
     printCentered(4, 80, body);
 }
 
@@ -595,8 +592,7 @@ void printErrorStack(entry *e) {
 
     /* display error stack */
     for (i = 0; i < errors.level; i++) {
-        printf("0x%08lx - %s\n",
-            (unsigned long) errors.offset[i], errors.error[i]);
+        printf("0x%08lx - %s\n", (unsigned long) errors.offset[i], errors.error[i]);
     }
 }
 
@@ -615,7 +611,7 @@ void process() {
     }
 
     level = 1;
-    while(positions[0].offset < positions[0].size) {
+    while (positions[0].offset < positions[0].size) {
         positions[1] = positions[0];
 
         entry = loadEntry();
@@ -679,17 +675,11 @@ void process() {
 
     /* Verify checksum */
     if (dump_version >= 5) {
-        uint64_t crc = crc64(0,positions[0].data,positions[0].size);
+        uint64_t crc = crc64(0, positions[0].data, positions[0].size);
         uint64_t crc2;
-        unsigned char *p = (unsigned char*)positions[0].data+positions[0].size;
-        crc2 = ((uint64_t)p[0] << 0) |
-               ((uint64_t)p[1] << 8) |
-               ((uint64_t)p[2] << 16) |
-               ((uint64_t)p[3] << 24) |
-               ((uint64_t)p[4] << 32) |
-               ((uint64_t)p[5] << 40) |
-               ((uint64_t)p[6] << 48) |
-               ((uint64_t)p[7] << 56);
+        unsigned char *p = (unsigned char *) positions[0].data + positions[0].size;
+        crc2 = ((uint64_t) p[0] << 0) | ((uint64_t) p[1] << 8) | ((uint64_t) p[2] << 16) | ((uint64_t) p[3] << 24) |
+               ((uint64_t) p[4] << 32) | ((uint64_t) p[5] << 40) | ((uint64_t) p[6] << 48) | ((uint64_t) p[7] << 56);
         if (crc != crc2) {
             SHIFT_ERROR(positions[0].offset, "RDB CRC64 does not match.");
         } else {
@@ -700,8 +690,7 @@ void process() {
     /* print summary on errors */
     if (num_errors) {
         printf("\n");
-        printf("Total unprocessable opcodes: %llu\n",
-            (unsigned long long) num_errors);
+        printf("Total unprocessable opcodes: %llu\n", (unsigned long long) num_errors);
     }
 }
 
@@ -756,9 +745,9 @@ int main(int argc, char **argv) {
 
     /* Double constants initialization */
     R_Zero = 0.0;
-    R_PosInf = 1.0/R_Zero;
-    R_NegInf = -1.0/R_Zero;
-    R_Nan = R_Zero/R_Zero;
+    R_PosInf = 1.0 / R_Zero;
+    R_NegInf = -1.0 / R_Zero;
+    R_Nan = R_Zero / R_Zero;
 
     process();
 

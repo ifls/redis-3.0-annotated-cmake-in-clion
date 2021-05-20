@@ -96,8 +96,11 @@ static struct config {
 } config;
 
 static void usage();
+
 static void slaveMode(void);
+
 char *redisGitSHA1(void);
+
 char *redisGitDirty(void);
 
 /*------------------------------------------------------------------------------
@@ -109,30 +112,27 @@ static long long ustime(void) {
     long long ust;
 
     gettimeofday(&tv, NULL);
-    ust = ((long long)tv.tv_sec)*1000000;
+    ust = ((long long) tv.tv_sec) * 1000000;
     ust += tv.tv_usec;
     return ust;
 }
 
 static long long mstime(void) {
-    return ustime()/1000;
+    return ustime() / 1000;
 }
 
 static void cliRefreshPrompt(void) {
     int len;
 
     if (config.hostsocket != NULL)
-        len = snprintf(config.prompt,sizeof(config.prompt),"redis %s",
-                       config.hostsocket);
+        len = snprintf(config.prompt, sizeof(config.prompt), "redis %s", config.hostsocket);
     else
-        len = snprintf(config.prompt,sizeof(config.prompt),
-                       strchr(config.hostip,':') ? "[%s]:%d" : "%s:%d",
+        len = snprintf(config.prompt, sizeof(config.prompt), strchr(config.hostip, ':') ? "[%s]:%d" : "%s:%d",
                        config.hostip, config.hostport);
     /* Add [dbnum] if needed */
     if (config.dbnum != 0)
-        len += snprintf(config.prompt+len,sizeof(config.prompt)-len,"[%d]",
-            config.dbnum);
-    snprintf(config.prompt+len,sizeof(config.prompt)-len,"> ");
+        len += snprintf(config.prompt + len, sizeof(config.prompt) - len, "[%d]", config.dbnum);
+    snprintf(config.prompt + len, sizeof(config.prompt) - len, "> ");
 }
 
 /*------------------------------------------------------------------------------
@@ -160,9 +160,9 @@ static sds cliVersion() {
     version = sdscatprintf(sdsempty(), "%s", REDIS_VERSION);
 
     /* Add git commit and working tree status when available */
-    if (strtoll(redisGitSHA1(),NULL,16)) {
+    if (strtoll(redisGitSHA1(), NULL, 16)) {
         version = sdscatprintf(version, " (git:%s", redisGitSHA1());
-        if (strtoll(redisGitDirty(),NULL,10))
+        if (strtoll(redisGitDirty(), NULL, 10))
             version = sdscatprintf(version, "-dirty");
         version = sdscat(version, ")");
     }
@@ -170,18 +170,18 @@ static sds cliVersion() {
 }
 
 static void cliInitHelp() {
-    int commandslen = sizeof(commandHelp)/sizeof(struct commandHelp);
-    int groupslen = sizeof(commandGroups)/sizeof(char*);
+    int commandslen = sizeof(commandHelp) / sizeof(struct commandHelp);
+    int groupslen = sizeof(commandGroups) / sizeof(char *);
     int i, len, pos = 0;
     helpEntry tmp;
 
-    helpEntriesLen = len = commandslen+groupslen;
-    helpEntries = malloc(sizeof(helpEntry)*len);
+    helpEntriesLen = len = commandslen + groupslen;
+    helpEntries = malloc(sizeof(helpEntry) * len);
 
     for (i = 0; i < groupslen; i++) {
         tmp.argc = 1;
         tmp.argv = malloc(sizeof(sds));
-        tmp.argv[0] = sdscatprintf(sdsempty(),"@%s",commandGroups[i]);
+        tmp.argv[0] = sdscatprintf(sdsempty(), "@%s", commandGroups[i]);
         tmp.full = tmp.argv[0];
         tmp.type = CLI_HELP_GROUP;
         tmp.org = NULL;
@@ -189,7 +189,7 @@ static void cliInitHelp() {
     }
 
     for (i = 0; i < commandslen; i++) {
-        tmp.argv = sdssplitargs(commandHelp[i].name,&tmp.argc);
+        tmp.argv = sdssplitargs(commandHelp[i].name, &tmp.argc);
         tmp.full = sdsnew(commandHelp[i].name);
         tmp.type = CLI_HELP_COMMAND;
         tmp.org = &commandHelp[i];
@@ -210,14 +210,11 @@ static void cliOutputCommandHelp(struct commandHelp *help, int group) {
 /* Print generic help. */
 static void cliOutputGenericHelp() {
     sds version = cliVersion();
-    printf(
-        "redis-cli %s\r\n"
-        "Type: \"help @<group>\" to get a list of commands in <group>\r\n"
-        "      \"help <command>\" for help on <command>\r\n"
-        "      \"help <tab>\" to get a list of possible help topics\r\n"
-        "      \"quit\" to exit\r\n",
-        version
-    );
+    printf("redis-cli %s\r\n"
+           "Type: \"help @<group>\" to get a list of commands in <group>\r\n"
+           "      \"help <command>\" for help on <command>\r\n"
+           "      \"help <tab>\" to get a list of possible help topics\r\n"
+           "      \"quit\" to exit\r\n", version);
     sdsfree(version);
 }
 
@@ -232,9 +229,9 @@ static void cliOutputHelp(int argc, char **argv) {
         cliOutputGenericHelp();
         return;
     } else if (argc > 0 && argv[0][0] == '@') {
-        len = sizeof(commandGroups)/sizeof(char*);
+        len = sizeof(commandGroups) / sizeof(char *);
         for (i = 0; i < len; i++) {
-            if (strcasecmp(argv[0]+1,commandGroups[i]) == 0) {
+            if (strcasecmp(argv[0] + 1, commandGroups[i]) == 0) {
                 group = i;
                 break;
             }
@@ -251,15 +248,15 @@ static void cliOutputHelp(int argc, char **argv) {
             /* Compare all arguments */
             if (argc == entry->argc) {
                 for (j = 0; j < argc; j++) {
-                    if (strcasecmp(argv[j],entry->argv[j]) != 0) break;
+                    if (strcasecmp(argv[j], entry->argv[j]) != 0) break;
                 }
                 if (j == argc) {
-                    cliOutputCommandHelp(help,1);
+                    cliOutputCommandHelp(help, 1);
                 }
             }
         } else {
             if (group == help->group) {
-                cliOutputCommandHelp(help,0);
+                cliOutputCommandHelp(help, 0);
             }
         }
     }
@@ -273,7 +270,7 @@ static void completionCallback(const char *buf, linenoiseCompletions *lc) {
     size_t matchlen;
     sds tmp;
 
-    if (strncasecmp(buf,"help ",5) == 0) {
+    if (strncasecmp(buf, "help ", 5) == 0) {
         startpos = 5;
         while (isspace(buf[startpos])) startpos++;
         mask = CLI_HELP_COMMAND | CLI_HELP_GROUP;
@@ -284,11 +281,11 @@ static void completionCallback(const char *buf, linenoiseCompletions *lc) {
     for (i = 0; i < helpEntriesLen; i++) {
         if (!(helpEntries[i].type & mask)) continue;
 
-        matchlen = strlen(buf+startpos);
-        if (strncasecmp(buf+startpos,helpEntries[i].full,matchlen) == 0) {
-            tmp = sdsnewlen(buf,startpos);
-            tmp = sdscat(tmp,helpEntries[i].full);
-            linenoiseAddCompletion(lc,tmp);
+        matchlen = strlen(buf + startpos);
+        if (strncasecmp(buf + startpos, helpEntries[i].full, matchlen) == 0) {
+            tmp = sdsnewlen(buf, startpos);
+            tmp = sdscat(tmp, helpEntries[i].full);
+            linenoiseAddCompletion(lc, tmp);
             sdsfree(tmp);
         }
     }
@@ -303,7 +300,7 @@ static int cliAuth() {
     redisReply *reply;
     if (config.auth == NULL) return REDIS_OK;
 
-    reply = redisCommand(context,"AUTH %s",config.auth);
+    reply = redisCommand(context, "AUTH %s", config.auth);
     if (reply != NULL) {
         freeReplyObject(reply);
         return REDIS_OK;
@@ -316,7 +313,7 @@ static int cliSelect() {
     redisReply *reply;
     if (config.dbnum == 0) return REDIS_OK;
 
-    reply = redisCommand(context,"SELECT %d",config.dbnum);
+    reply = redisCommand(context, "SELECT %d", config.dbnum);
     if (reply != NULL) {
         freeReplyObject(reply);
         return REDIS_OK;
@@ -332,17 +329,17 @@ static int cliConnect(int force) {
             redisFree(context);
 
         if (config.hostsocket == NULL) {
-            context = redisConnect(config.hostip,config.hostport);
+            context = redisConnect(config.hostip, config.hostport);
         } else {
             context = redisConnectUnix(config.hostsocket);
         }
 
         if (context->err) {
-            fprintf(stderr,"Could not connect to Redis 3at ");
+            fprintf(stderr, "Could not connect to Redis 3at ");
             if (config.hostsocket == NULL)
-                fprintf(stderr,"%s:%d: %s\n",config.hostip,config.hostport,context->errstr);
+                fprintf(stderr, "%s:%d: %s\n", config.hostip, config.hostport, context->errstr);
             else
-                fprintf(stderr,"%s: %s\n",config.hostsocket,context->errstr);
+                fprintf(stderr, "%s: %s\n", config.hostsocket, context->errstr);
             redisFree(context);
             context = NULL;
             return REDIS_ERR;
@@ -365,72 +362,72 @@ static int cliConnect(int force) {
 
 static void cliPrintContextError() {
     if (context == NULL) return;
-    fprintf(stderr,"Error: %s\n",context->errstr);
+    fprintf(stderr, "Error: %s\n", context->errstr);
 }
 
 static sds cliFormatReplyTTY(redisReply *r, char *prefix) {
     sds out = sdsempty();
     switch (r->type) {
-    case REDIS_REPLY_ERROR:
-        out = sdscatprintf(out,"(error) %s\n", r->str);
-    break;
-    case REDIS_REPLY_STATUS:
-        out = sdscat(out,r->str);
-        out = sdscat(out,"\n");
-    break;
-    case REDIS_REPLY_INTEGER:
-        out = sdscatprintf(out,"(integer) %lld\n",r->integer);
-    break;
-    case REDIS_REPLY_STRING:
-        /* If you are producing output for the standard output we want
-        * a more interesting output with quoted characters and so forth */
-        out = sdscatrepr(out,r->str,r->len);
-        out = sdscat(out,"\n");
-    break;
-    case REDIS_REPLY_NIL:
-        out = sdscat(out,"(nil)\n");
-    break;
-    case REDIS_REPLY_ARRAY:
-        if (r->elements == 0) {
-            out = sdscat(out,"(empty list or set)\n");
-        } else {
-            unsigned int i, idxlen = 0;
-            char _prefixlen[16];
-            char _prefixfmt[16];
-            sds _prefix;
-            sds tmp;
+        case REDIS_REPLY_ERROR:
+            out = sdscatprintf(out, "(error) %s\n", r->str);
+            break;
+        case REDIS_REPLY_STATUS:
+            out = sdscat(out, r->str);
+            out = sdscat(out, "\n");
+            break;
+        case REDIS_REPLY_INTEGER:
+            out = sdscatprintf(out, "(integer) %lld\n", r->integer);
+            break;
+        case REDIS_REPLY_STRING:
+            /* If you are producing output for the standard output we want
+            * a more interesting output with quoted characters and so forth */
+            out = sdscatrepr(out, r->str, r->len);
+            out = sdscat(out, "\n");
+            break;
+        case REDIS_REPLY_NIL:
+            out = sdscat(out, "(nil)\n");
+            break;
+        case REDIS_REPLY_ARRAY:
+            if (r->elements == 0) {
+                out = sdscat(out, "(empty list or set)\n");
+            } else {
+                unsigned int i, idxlen = 0;
+                char _prefixlen[16];
+                char _prefixfmt[16];
+                sds _prefix;
+                sds tmp;
 
-            /* Calculate chars needed to represent the largest index */
-            i = r->elements;
-            do {
-                idxlen++;
-                i /= 10;
-            } while(i);
+                /* Calculate chars needed to represent the largest index */
+                i = r->elements;
+                do {
+                    idxlen++;
+                    i /= 10;
+                } while (i);
 
-            /* Prefix for nested multi bulks should grow with idxlen+2 spaces */
-            memset(_prefixlen,' ',idxlen+2);
-            _prefixlen[idxlen+2] = '\0';
-            _prefix = sdscat(sdsnew(prefix),_prefixlen);
+                /* Prefix for nested multi bulks should grow with idxlen+2 spaces */
+                memset(_prefixlen, ' ', idxlen + 2);
+                _prefixlen[idxlen + 2] = '\0';
+                _prefix = sdscat(sdsnew(prefix), _prefixlen);
 
-            /* Setup prefix format for every entry */
-            snprintf(_prefixfmt,sizeof(_prefixfmt),"%%s%%%dd) ",idxlen);
+                /* Setup prefix format for every entry */
+                snprintf(_prefixfmt, sizeof(_prefixfmt), "%%s%%%dd) ", idxlen);
 
-            for (i = 0; i < r->elements; i++) {
-                /* Don't use the prefix for the first element, as the parent
-                 * caller already prepended the index number. */
-                out = sdscatprintf(out,_prefixfmt,i == 0 ? "" : prefix,i+1);
+                for (i = 0; i < r->elements; i++) {
+                    /* Don't use the prefix for the first element, as the parent
+                     * caller already prepended the index number. */
+                    out = sdscatprintf(out, _prefixfmt, i == 0 ? "" : prefix, i + 1);
 
-                /* Format the multi bulk entry */
-                tmp = cliFormatReplyTTY(r->element[i],_prefix);
-                out = sdscatlen(out,tmp,sdslen(tmp));
-                sdsfree(tmp);
+                    /* Format the multi bulk entry */
+                    tmp = cliFormatReplyTTY(r->element[i], _prefix);
+                    out = sdscatlen(out, tmp, sdslen(tmp));
+                    sdsfree(tmp);
+                }
+                sdsfree(_prefix);
             }
-            sdsfree(_prefix);
-        }
-    break;
-    default:
-        fprintf(stderr,"Unknown reply type: %d\n", r->type);
-        exit(1);
+            break;
+        default:
+            fprintf(stderr, "Unknown reply type: %d\n", r->type);
+            exit(1);
     }
     return out;
 }
@@ -440,31 +437,31 @@ static sds cliFormatReplyRaw(redisReply *r) {
     size_t i;
 
     switch (r->type) {
-    case REDIS_REPLY_NIL:
-        /* Nothing... */
-        break;
-    case REDIS_REPLY_ERROR:
-        out = sdscatlen(out,r->str,r->len);
-        out = sdscatlen(out,"\n",1);
-        break;
-    case REDIS_REPLY_STATUS:
-    case REDIS_REPLY_STRING:
-        out = sdscatlen(out,r->str,r->len);
-        break;
-    case REDIS_REPLY_INTEGER:
-        out = sdscatprintf(out,"%lld",r->integer);
-        break;
-    case REDIS_REPLY_ARRAY:
-        for (i = 0; i < r->elements; i++) {
-            if (i > 0) out = sdscat(out,config.mb_delim);
-            tmp = cliFormatReplyRaw(r->element[i]);
-            out = sdscatlen(out,tmp,sdslen(tmp));
-            sdsfree(tmp);
-        }
-        break;
-    default:
-        fprintf(stderr,"Unknown reply type: %d\n", r->type);
-        exit(1);
+        case REDIS_REPLY_NIL:
+            /* Nothing... */
+            break;
+        case REDIS_REPLY_ERROR:
+            out = sdscatlen(out, r->str, r->len);
+            out = sdscatlen(out, "\n", 1);
+            break;
+        case REDIS_REPLY_STATUS:
+        case REDIS_REPLY_STRING:
+            out = sdscatlen(out, r->str, r->len);
+            break;
+        case REDIS_REPLY_INTEGER:
+            out = sdscatprintf(out, "%lld", r->integer);
+            break;
+        case REDIS_REPLY_ARRAY:
+            for (i = 0; i < r->elements; i++) {
+                if (i > 0) out = sdscat(out, config.mb_delim);
+                tmp = cliFormatReplyRaw(r->element[i]);
+                out = sdscatlen(out, tmp, sdslen(tmp));
+                sdsfree(tmp);
+            }
+            break;
+        default:
+            fprintf(stderr, "Unknown reply type: %d\n", r->type);
+            exit(1);
     }
     return out;
 }
@@ -474,33 +471,33 @@ static sds cliFormatReplyCSV(redisReply *r) {
 
     sds out = sdsempty();
     switch (r->type) {
-    case REDIS_REPLY_ERROR:
-        out = sdscat(out,"ERROR,");
-        out = sdscatrepr(out,r->str,strlen(r->str));
-    break;
-    case REDIS_REPLY_STATUS:
-        out = sdscatrepr(out,r->str,r->len);
-    break;
-    case REDIS_REPLY_INTEGER:
-        out = sdscatprintf(out,"%lld",r->integer);
-    break;
-    case REDIS_REPLY_STRING:
-        out = sdscatrepr(out,r->str,r->len);
-    break;
-    case REDIS_REPLY_NIL:
-        out = sdscat(out,"NIL\n");
-    break;
-    case REDIS_REPLY_ARRAY:
-        for (i = 0; i < r->elements; i++) {
-            sds tmp = cliFormatReplyCSV(r->element[i]);
-            out = sdscatlen(out,tmp,sdslen(tmp));
-            if (i != r->elements-1) out = sdscat(out,",");
-            sdsfree(tmp);
-        }
-    break;
-    default:
-        fprintf(stderr,"Unknown reply type: %d\n", r->type);
-        exit(1);
+        case REDIS_REPLY_ERROR:
+            out = sdscat(out, "ERROR,");
+            out = sdscatrepr(out, r->str, strlen(r->str));
+            break;
+        case REDIS_REPLY_STATUS:
+            out = sdscatrepr(out, r->str, r->len);
+            break;
+        case REDIS_REPLY_INTEGER:
+            out = sdscatprintf(out, "%lld", r->integer);
+            break;
+        case REDIS_REPLY_STRING:
+            out = sdscatrepr(out, r->str, r->len);
+            break;
+        case REDIS_REPLY_NIL:
+            out = sdscat(out, "NIL\n");
+            break;
+        case REDIS_REPLY_ARRAY:
+            for (i = 0; i < r->elements; i++) {
+                sds tmp = cliFormatReplyCSV(r->element[i]);
+                out = sdscatlen(out, tmp, sdslen(tmp));
+                if (i != r->elements - 1) out = sdscat(out, ",");
+                sdsfree(tmp);
+            }
+            break;
+        default:
+            fprintf(stderr, "Unknown reply type: %d\n", r->type);
+            exit(1);
     }
     return out;
 }
@@ -511,7 +508,7 @@ static int cliReadReply(int output_raw_strings) {
     sds out = NULL;
     int output = 1;
 
-    if (redisGetReply(context,&_reply) != REDIS_OK) {
+    if (redisGetReply(context, &_reply) != REDIS_OK) {
         if (config.shutdown)
             return REDIS_OK;
         if (config.interactive) {
@@ -526,13 +523,12 @@ static int cliReadReply(int output_raw_strings) {
         return REDIS_ERR; /* avoid compiler warning */
     }
 
-    reply = (redisReply*)_reply;
+    reply = (redisReply *) _reply;
 
     /* Check if we need to connect to a different node and reissue the
      * request. */
     if (config.cluster_mode && reply->type == REDIS_REPLY_ERROR &&
-        (!strncmp(reply->str,"MOVED",5) || !strcmp(reply->str,"ASK")))
-    {
+        (!strncmp(reply->str, "MOVED", 5) || !strcmp(reply->str, "ASK"))) {
         char *p = reply->str, *s;
         int slot;
 
@@ -542,18 +538,17 @@ static int cliReadReply(int output_raw_strings) {
          * [S] for pointer 's'
          * [P] for pointer 'p'
          */
-        s = strchr(p,' ');      /* MOVED[S]3999 127.0.0.1:6381 */
-        p = strchr(s+1,' ');    /* MOVED[S]3999[P]127.0.0.1:6381 */
+        s = strchr(p, ' ');      /* MOVED[S]3999 127.0.0.1:6381 */
+        p = strchr(s + 1, ' ');    /* MOVED[S]3999[P]127.0.0.1:6381 */
         *p = '\0';
-        slot = atoi(s+1);
-        s = strchr(p+1,':');    /* MOVED 3999[P]127.0.0.1[S]6381 */
+        slot = atoi(s + 1);
+        s = strchr(p + 1, ':');    /* MOVED 3999[P]127.0.0.1[S]6381 */
         *s = '\0';
         sdsfree(config.hostip);
-        config.hostip = sdsnew(p+1);
-        config.hostport = atoi(s+1);
+        config.hostip = sdsnew(p + 1);
+        config.hostport = atoi(s + 1);
         if (config.interactive)
-            printf("-> Redirected to slot [%d] located at %s:%d\n",
-                slot, config.hostip, config.hostport);
+            printf("-> Redirected to slot [%d] located at %s:%d\n", slot, config.hostip, config.hostport);
         config.cluster_reissue_command = 1;
         cliRefreshPrompt();
     }
@@ -564,15 +559,15 @@ static int cliReadReply(int output_raw_strings) {
         } else {
             if (config.output == OUTPUT_RAW) {
                 out = cliFormatReplyRaw(reply);
-                out = sdscat(out,"\n");
+                out = sdscat(out, "\n");
             } else if (config.output == OUTPUT_STANDARD) {
-                out = cliFormatReplyTTY(reply,"");
+                out = cliFormatReplyTTY(reply, "");
             } else if (config.output == OUTPUT_CSV) {
                 out = cliFormatReplyCSV(reply);
-                out = sdscat(out,"\n");
+                out = sdscat(out, "\n");
             }
         }
-        fwrite(out,sdslen(out),1,stdout);
+        fwrite(out, sdslen(out), 1, stdout);
         sdsfree(out);
     }
     freeReplyObject(reply);
@@ -584,7 +579,7 @@ static int cliSendCommand(int argc, char **argv, int repeat) {
     size_t *argvlen;
     int j, output_raw;
 
-    if (!strcasecmp(command,"help") || !strcasecmp(command,"?")) {
+    if (!strcasecmp(command, "help") || !strcasecmp(command, "?")) {
         cliOutputHelp(--argc, ++argv);
         return REDIS_OK;
     }
@@ -592,31 +587,26 @@ static int cliSendCommand(int argc, char **argv, int repeat) {
     if (context == NULL) return REDIS_ERR;
 
     output_raw = 0;
-    if (!strcasecmp(command,"info") ||
-        (argc == 2 && !strcasecmp(command,"cluster") &&
-                      (!strcasecmp(argv[1],"nodes") ||
-                       !strcasecmp(argv[1],"info"))) ||
-        (argc == 2 && !strcasecmp(command,"client") &&
-                       !strcasecmp(argv[1],"list")))
-
-    {
+    if (!strcasecmp(command, "info") || (argc == 2 && !strcasecmp(command, "cluster") &&
+                                         (!strcasecmp(argv[1], "nodes") || !strcasecmp(argv[1], "info"))) ||
+        (argc == 2 && !strcasecmp(command, "client") && !strcasecmp(argv[1], "list"))) {
         output_raw = 1;
     }
 
-    if (!strcasecmp(command,"shutdown")) config.shutdown = 1;
-    if (!strcasecmp(command,"monitor")) config.monitor_mode = 1;
-    if (!strcasecmp(command,"subscribe") ||
-        !strcasecmp(command,"psubscribe")) config.pubsub_mode = 1;
-    if (!strcasecmp(command,"sync") ||
-        !strcasecmp(command,"psync")) config.slave_mode = 1;
+    if (!strcasecmp(command, "shutdown")) config.shutdown = 1;
+    if (!strcasecmp(command, "monitor")) config.monitor_mode = 1;
+    if (!strcasecmp(command, "subscribe") || !strcasecmp(command, "psubscribe"))
+        config.pubsub_mode = 1;
+    if (!strcasecmp(command, "sync") || !strcasecmp(command, "psync"))
+        config.slave_mode = 1;
 
     /* Setup argument length */
-    argvlen = malloc(argc*sizeof(size_t));
+    argvlen = malloc(argc * sizeof(size_t));
     for (j = 0; j < argc; j++)
         argvlen[j] = sdslen(argv[j]);
 
-    while(repeat--) {
-        redisAppendCommandArgv(context,argc,(const char**)argv,argvlen);
+    while (repeat--) {
+        redisAppendCommandArgv(context, argc, (const char **) argv, argvlen);
         while (config.monitor_mode) {
             if (cliReadReply(output_raw) != REDIS_OK) exit(1);
             fflush(stdout);
@@ -642,7 +632,7 @@ static int cliSendCommand(int argc, char **argv, int repeat) {
             return REDIS_ERR;
         } else {
             /* Store database number when SELECT was successfully executed. */
-            if (!strcasecmp(command,"select") && argc == 2) {
+            if (!strcasecmp(command, "select") && argc == 2) {
                 config.dbnum = atoi(argv[1]);
                 cliRefreshPrompt();
             }
@@ -662,17 +652,17 @@ static redisReply *reconnectingInfo(void) {
     int tries = 0;
 
     assert(!c->err);
-    while(reply == NULL) {
+    while (reply == NULL) {
         while (c->err & (REDIS_ERR_IO | REDIS_ERR_EOF)) {
             printf("Reconnecting (%d)...\r", ++tries);
             fflush(stdout);
 
             redisFree(c);
-            c = redisConnect(config.hostip,config.hostport);
+            c = redisConnect(config.hostip, config.hostport);
             usleep(1000000);
         }
 
-        reply = redisCommand(c,"INFO");
+        reply = redisCommand(c, "INFO");
         if (c->err && !(c->err & (REDIS_ERR_IO | REDIS_ERR_EOF))) {
             fprintf(stderr, "Error: %s\n", c->errstr);
             exit(1);
@@ -693,76 +683,74 @@ static int parseOptions(int argc, char **argv) {
     int i;
 
     for (i = 1; i < argc; i++) {
-        int lastarg = i==argc-1;
+        int lastarg = i == argc - 1;
 
-        if (!strcmp(argv[i],"-h") && !lastarg) {
+        if (!strcmp(argv[i], "-h") && !lastarg) {
             sdsfree(config.hostip);
             config.hostip = sdsnew(argv[++i]);
-        } else if (!strcmp(argv[i],"-h") && lastarg) {
+        } else if (!strcmp(argv[i], "-h") && lastarg) {
             usage();
-        } else if (!strcmp(argv[i],"--help")) {
+        } else if (!strcmp(argv[i], "--help")) {
             usage();
-        } else if (!strcmp(argv[i],"-x")) {
+        } else if (!strcmp(argv[i], "-x")) {
             config.stdinarg = 1;
-        } else if (!strcmp(argv[i],"-p") && !lastarg) {
+        } else if (!strcmp(argv[i], "-p") && !lastarg) {
             config.hostport = atoi(argv[++i]);
-        } else if (!strcmp(argv[i],"-s") && !lastarg) {
+        } else if (!strcmp(argv[i], "-s") && !lastarg) {
             config.hostsocket = argv[++i];
-        } else if (!strcmp(argv[i],"-r") && !lastarg) {
-            config.repeat = strtoll(argv[++i],NULL,10);
-        } else if (!strcmp(argv[i],"-i") && !lastarg) {
+        } else if (!strcmp(argv[i], "-r") && !lastarg) {
+            config.repeat = strtoll(argv[++i], NULL, 10);
+        } else if (!strcmp(argv[i], "-i") && !lastarg) {
             double seconds = atof(argv[++i]);
-            config.interval = seconds*1000000;
-        } else if (!strcmp(argv[i],"-n") && !lastarg) {
+            config.interval = seconds * 1000000;
+        } else if (!strcmp(argv[i], "-n") && !lastarg) {
             config.dbnum = atoi(argv[++i]);
-        } else if (!strcmp(argv[i],"-a") && !lastarg) {
+        } else if (!strcmp(argv[i], "-a") && !lastarg) {
             config.auth = argv[++i];
-        } else if (!strcmp(argv[i],"--raw")) {
+        } else if (!strcmp(argv[i], "--raw")) {
             config.output = OUTPUT_RAW;
-        } else if (!strcmp(argv[i],"--csv")) {
+        } else if (!strcmp(argv[i], "--csv")) {
             config.output = OUTPUT_CSV;
-        } else if (!strcmp(argv[i],"--latency")) {
+        } else if (!strcmp(argv[i], "--latency")) {
             config.latency_mode = 1;
-        } else if (!strcmp(argv[i],"--latency-history")) {
+        } else if (!strcmp(argv[i], "--latency-history")) {
             config.latency_mode = 1;
             config.latency_history = 1;
-        } else if (!strcmp(argv[i],"--slave")) {
+        } else if (!strcmp(argv[i], "--slave")) {
             config.slave_mode = 1;
-        } else if (!strcmp(argv[i],"--stat")) {
+        } else if (!strcmp(argv[i], "--stat")) {
             config.stat_mode = 1;
-        } else if (!strcmp(argv[i],"--scan")) {
+        } else if (!strcmp(argv[i], "--scan")) {
             config.scan_mode = 1;
-        } else if (!strcmp(argv[i],"--pattern") && !lastarg) {
+        } else if (!strcmp(argv[i], "--pattern") && !lastarg) {
             config.pattern = argv[++i];
-        } else if (!strcmp(argv[i],"--intrinsic-latency") && !lastarg) {
+        } else if (!strcmp(argv[i], "--intrinsic-latency") && !lastarg) {
             config.intrinsic_latency_mode = 1;
             config.intrinsic_latency_duration = atoi(argv[++i]);
-        } else if (!strcmp(argv[i],"--rdb") && !lastarg) {
+        } else if (!strcmp(argv[i], "--rdb") && !lastarg) {
             config.getrdb_mode = 1;
             config.rdb_filename = argv[++i];
-        } else if (!strcmp(argv[i],"--pipe")) {
+        } else if (!strcmp(argv[i], "--pipe")) {
             config.pipe_mode = 1;
-        } else if (!strcmp(argv[i],"--pipe-timeout") && !lastarg) {
+        } else if (!strcmp(argv[i], "--pipe-timeout") && !lastarg) {
             config.pipe_timeout = atoi(argv[++i]);
-        } else if (!strcmp(argv[i],"--bigkeys")) {
+        } else if (!strcmp(argv[i], "--bigkeys")) {
             config.bigkeys = 1;
-        } else if (!strcmp(argv[i],"--eval") && !lastarg) {
+        } else if (!strcmp(argv[i], "--eval") && !lastarg) {
             config.eval = argv[++i];
-        } else if (!strcmp(argv[i],"-c")) {
+        } else if (!strcmp(argv[i], "-c")) {
             config.cluster_mode = 1;
-        } else if (!strcmp(argv[i],"-d") && !lastarg) {
+        } else if (!strcmp(argv[i], "-d") && !lastarg) {
             sdsfree(config.mb_delim);
             config.mb_delim = sdsnew(argv[++i]);
-        } else if (!strcmp(argv[i],"-v") || !strcmp(argv[i], "--version")) {
+        } else if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--version")) {
             sds version = cliVersion();
             printf("redis-cli %s\n", version);
             sdsfree(version);
             exit(0);
         } else {
             if (argv[i][0] == '-') {
-                fprintf(stderr,
-                    "Unrecognized option or bad number of args for: '%s'\n",
-                    argv[i]);
+                fprintf(stderr, "Unrecognized option or bad number of args for: '%s'\n", argv[i]);
                 exit(1);
             } else {
                 /* Likely the command name, stop here. */
@@ -777,87 +765,86 @@ static sds readArgFromStdin(void) {
     char buf[1024];
     sds arg = sdsempty();
 
-    while(1) {
-        int nread = read(fileno(stdin),buf,1024);
+    while (1) {
+        int nread = read(fileno(stdin), buf, 1024);
 
         if (nread == 0) break;
         else if (nread == -1) {
             perror("Reading from standard input");
             exit(1);
         }
-        arg = sdscatlen(arg,buf,nread);
+        arg = sdscatlen(arg, buf, nread);
     }
     return arg;
 }
 
 static void usage() {
     sds version = cliVersion();
-    fprintf(stderr,
-"redis-cli %s\n"
-"\n"
-"Usage: redis-cli [OPTIONS] [cmd [arg [arg ...]]]\n"
-"  -h <hostname>      Server hostname (default: 127.0.0.1).\n"
-"  -p <port>          Server port (default: 6379).\n"
-"  -s <socket>        Server socket (overrides hostname and port).\n"
-"  -a <password>      Password to use when connecting to the server.\n"
-"  -r <repeat>        Execute specified command N times.\n"
-"  -i <interval>      When -r is used, waits <interval> seconds per command.\n"
-"                     It is possible to specify sub-second times like -i 0.1.\n"
-"  -n <db>            Database number.\n"
-"  -x                 Read last argument from STDIN.\n"
-"  -d <delimiter>     Multi-bulk delimiter in for raw formatting (default: \\n).\n"
-"  -c                 Enable cluster mode (follow -ASK and -MOVED redirections).\n"
-"  --raw              Use raw formatting for replies (default when STDOUT is\n"
-"                     not a tty).\n"
-"  --csv              Output in CSV format.\n"
-"  --latency          Enter a special mode continuously sampling latency.\n"
-"  --latency-history  Like --latency but tracking latency changes over time.\n"
-"                     Default time interval is 15 sec. Change it using -i.\n"
-"  --slave            Simulate a slave showing commands received from the master.\n"
-"  --rdb <filename>   Transfer an RDB dump from remote server to local file.\n"
-"  --pipe             Transfer raw Redis protocol from stdin to server.\n"
-"  --pipe-timeout <n> In --pipe mode, abort with error if after sending all data.\n"
-"                     no reply is received within <n> seconds.\n"
-"                     Default timeout: %d. Use 0 to wait forever.\n"
-"  --bigkeys          Sample Redis keys looking for big keys.\n"
-"  --scan             List all keys using the SCAN command.\n"
-"  --pattern <pat>    Useful with --scan to specify a SCAN pattern.\n"
-"  --intrinsic-latency <sec> Run a test to measure intrinsic system latency.\n"
-"                     The test will run for the specified amount of seconds.\n"
-"  --eval <file>      Send an EVAL command using the Lua script at <file>.\n"
-"  --help             Output this help and exit.\n"
-"  --version          Output version and exit.\n"
-"\n"
-"Examples:\n"
-"  cat /etc/passwd | redis-cli -x set mypasswd\n"
-"  redis-cli get mypasswd\n"
-"  redis-cli -r 100 lpush mylist x\n"
-"  redis-cli -r 100 -i 1 info | grep used_memory_human:\n"
-"  redis-cli --eval myscript.lua key1 key2 , arg1 arg2 arg3\n"
-"  redis-cli --scan --pattern '*:12345*'\n"
-"\n"
-"  (Note: when using --eval the comma separates KEYS[] from ARGV[] items)\n"
-"\n"
-"When no command is given, redis-cli starts in interactive mode.\n"
-"Type \"help\" in interactive mode for information on available commands.\n"
-"\n",
-        version, REDIS_CLI_DEFAULT_PIPE_TIMEOUT);
+    fprintf(stderr, "redis-cli %s\n"
+                    "\n"
+                    "Usage: redis-cli [OPTIONS] [cmd [arg [arg ...]]]\n"
+                    "  -h <hostname>      Server hostname (default: 127.0.0.1).\n"
+                    "  -p <port>          Server port (default: 6379).\n"
+                    "  -s <socket>        Server socket (overrides hostname and port).\n"
+                    "  -a <password>      Password to use when connecting to the server.\n"
+                    "  -r <repeat>        Execute specified command N times.\n"
+                    "  -i <interval>      When -r is used, waits <interval> seconds per command.\n"
+                    "                     It is possible to specify sub-second times like -i 0.1.\n"
+                    "  -n <db>            Database number.\n"
+                    "  -x                 Read last argument from STDIN.\n"
+                    "  -d <delimiter>     Multi-bulk delimiter in for raw formatting (default: \\n).\n"
+                    "  -c                 Enable cluster mode (follow -ASK and -MOVED redirections).\n"
+                    "  --raw              Use raw formatting for replies (default when STDOUT is\n"
+                    "                     not a tty).\n"
+                    "  --csv              Output in CSV format.\n"
+                    "  --latency          Enter a special mode continuously sampling latency.\n"
+                    "  --latency-history  Like --latency but tracking latency changes over time.\n"
+                    "                     Default time interval is 15 sec. Change it using -i.\n"
+                    "  --slave            Simulate a slave showing commands received from the master.\n"
+                    "  --rdb <filename>   Transfer an RDB dump from remote server to local file.\n"
+                    "  --pipe             Transfer raw Redis protocol from stdin to server.\n"
+                    "  --pipe-timeout <n> In --pipe mode, abort with error if after sending all data.\n"
+                    "                     no reply is received within <n> seconds.\n"
+                    "                     Default timeout: %d. Use 0 to wait forever.\n"
+                    "  --bigkeys          Sample Redis keys looking for big keys.\n"
+                    "  --scan             List all keys using the SCAN command.\n"
+                    "  --pattern <pat>    Useful with --scan to specify a SCAN pattern.\n"
+                    "  --intrinsic-latency <sec> Run a test to measure intrinsic system latency.\n"
+                    "                     The test will run for the specified amount of seconds.\n"
+                    "  --eval <file>      Send an EVAL command using the Lua script at <file>.\n"
+                    "  --help             Output this help and exit.\n"
+                    "  --version          Output version and exit.\n"
+                    "\n"
+                    "Examples:\n"
+                    "  cat /etc/passwd | redis-cli -x set mypasswd\n"
+                    "  redis-cli get mypasswd\n"
+                    "  redis-cli -r 100 lpush mylist x\n"
+                    "  redis-cli -r 100 -i 1 info | grep used_memory_human:\n"
+                    "  redis-cli --eval myscript.lua key1 key2 , arg1 arg2 arg3\n"
+                    "  redis-cli --scan --pattern '*:12345*'\n"
+                    "\n"
+                    "  (Note: when using --eval the comma separates KEYS[] from ARGV[] items)\n"
+                    "\n"
+                    "When no command is given, redis-cli starts in interactive mode.\n"
+                    "Type \"help\" in interactive mode for information on available commands.\n"
+                    "\n", version, REDIS_CLI_DEFAULT_PIPE_TIMEOUT);
     sdsfree(version);
     exit(1);
 }
 
 /* Turn the plain C strings into Sds strings */
-static char **convertToSds(int count, char** args) {
-  int j;
-  char **sds = zmalloc(sizeof(char*)*count);
+static char **convertToSds(int count, char **args) {
+    int j;
+    char **sds = zmalloc(sizeof(char *) * count);
 
-  for(j = 0; j < count; j++)
-    sds[j] = sdsnew(args[j]);
+    for (j = 0; j < count; j++)
+        sds[j] = sdsnew(args[j]);
 
-  return sds;
+    return sds;
 }
 
 #define LINE_BUFLEN 4096
+
 static void repl() {
     sds historyfile = NULL;
     int history = 0;
@@ -874,15 +861,15 @@ static void repl() {
         history = 1;
 
         if (getenv("HOME") != NULL) {
-            historyfile = sdscatprintf(sdsempty(),"%s/.rediscli_history",getenv("HOME"));
+            historyfile = sdscatprintf(sdsempty(), "%s/.rediscli_history", getenv("HOME"));
             linenoiseHistoryLoad(historyfile);
         }
     }
 
     cliRefreshPrompt();
-    while((line = linenoise(context ? config.prompt : "not connected> ")) != NULL) {
+    while ((line = linenoise(context ? config.prompt : "not connected> ")) != NULL) {
         if (line[0] != '\0') {
-            argv = sdssplitargs(line,&argc);
+            argv = sdssplitargs(line, &argc);
             if (history) linenoiseHistoryAdd(line);
             if (historyfile) linenoiseHistorySave(historyfile);
 
@@ -891,17 +878,15 @@ static void repl() {
                 free(line);
                 continue;
             } else if (argc > 0) {
-                if (strcasecmp(argv[0],"quit") == 0 ||
-                    strcasecmp(argv[0],"exit") == 0)
-                {
+                if (strcasecmp(argv[0], "quit") == 0 || strcasecmp(argv[0], "exit") == 0) {
                     exit(0);
-                } else if (argc == 3 && !strcasecmp(argv[0],"connect")) {
+                } else if (argc == 3 && !strcasecmp(argv[0], "connect")) {
                     sdsfree(config.hostip);
                     config.hostip = sdsnew(argv[1]);
                     config.hostport = atoi(argv[2]);
                     cliRefreshPrompt();
                     cliConnect(1);
-                } else if (argc == 1 && !strcasecmp(argv[0],"clear")) {
+                } else if (argc == 1 && !strcasecmp(argv[0], "clear")) {
                     linenoiseClearScreen();
                 } else {
                     long long start_time = mstime(), elapsed;
@@ -916,15 +901,12 @@ static void repl() {
 
                     while (1) {
                         config.cluster_reissue_command = 0;
-                        if (cliSendCommand(argc-skipargs,argv+skipargs,repeat)
-                            != REDIS_OK)
-                        {
+                        if (cliSendCommand(argc - skipargs, argv + skipargs, repeat) != REDIS_OK) {
                             cliConnect(1);
 
                             /* If we still cannot send the command print error.
                              * We'll try to reconnect the next time. */
-                            if (cliSendCommand(argc-skipargs,argv+skipargs,repeat)
-                                != REDIS_OK)
+                            if (cliSendCommand(argc - skipargs, argv + skipargs, repeat) != REDIS_OK)
                                 cliPrintContextError();
                         }
                         /* Issue the command again if we got redirected in cluster mode */
@@ -934,14 +916,14 @@ static void repl() {
                             break;
                         }
                     }
-                    elapsed = mstime()-start_time;
+                    elapsed = mstime() - start_time;
                     if (elapsed >= 500) {
-                        printf("(%.2fs)\n",(double)elapsed/1000);
+                        printf("(%.2fs)\n", (double) elapsed / 1000);
                     }
                 }
             }
             /* Free the argument vector */
-            sdsfreesplitres(argv,argc);
+            sdsfreesplitres(argv, argc);
         }
         /* linenoise() returns malloc-ed lines like readline() */
         free(line);
@@ -952,9 +934,9 @@ static void repl() {
 static int noninteractive(int argc, char **argv) {
     int retval = 0;
     if (config.stdinarg) {
-        argv = zrealloc(argv, (argc+1)*sizeof(char*));
+        argv = zrealloc(argv, (argc + 1) * sizeof(char *));
         argv[argc] = readArgFromStdin();
-        retval = cliSendCommand(argc+1, argv, config.repeat);
+        retval = cliSendCommand(argc + 1, argv, config.repeat);
     } else {
         /* stdin is probably a tty, can be tested with S_ISCHR(s.st_mode) */
         retval = cliSendCommand(argc, argv, config.repeat);
@@ -975,19 +957,18 @@ static int evalMode(int argc, char **argv) {
     int j, got_comma = 0, keys = 0;
 
     /* Load the script from the file, as an sds string. */
-    fp = fopen(config.eval,"r");
+    fp = fopen(config.eval, "r");
     if (!fp) {
-        fprintf(stderr,
-            "Can't open file '%s': %s\n", config.eval, strerror(errno));
+        fprintf(stderr, "Can't open file '%s': %s\n", config.eval, strerror(errno));
         exit(1);
     }
-    while((nread = fread(buf,1,sizeof(buf),fp)) != 0) {
-        script = sdscatlen(script,buf,nread);
+    while ((nread = fread(buf, 1, sizeof(buf), fp)) != 0) {
+        script = sdscatlen(script, buf, nread);
     }
     fclose(fp);
 
     /* Create our argument vector */
-    argv2 = zmalloc(sizeof(sds)*(argc+3));
+    argv2 = zmalloc(sizeof(sds) * (argc + 3));
     argv2[0] = sdsnew("EVAL");
     argv2[1] = script;
     for (j = 0; j < argc; j++) {
@@ -995,13 +976,13 @@ static int evalMode(int argc, char **argv) {
             got_comma = 1;
             continue;
         }
-        argv2[j+3-got_comma] = sdsnew(argv[j]);
+        argv2[j + 3 - got_comma] = sdsnew(argv[j]);
         if (!got_comma) keys++;
     }
-    argv2[2] = sdscatprintf(sdsempty(),"%d",keys);
+    argv2[2] = sdscatprintf(sdsempty(), "%d", keys);
 
     /* Call it */
-    return cliSendCommand(argc+3-got_comma, argv2, config.repeat);
+    return cliSendCommand(argc + 3 - got_comma, argv2, config.repeat);
 }
 
 /*------------------------------------------------------------------------------
@@ -1010,24 +991,23 @@ static int evalMode(int argc, char **argv) {
 
 #define LATENCY_SAMPLE_RATE 10 /* milliseconds. */
 #define LATENCY_HISTORY_DEFAULT_INTERVAL 15000 /* milliseconds. */
+
 static void latencyMode(void) {
     redisReply *reply;
     long long start, latency, min = 0, max = 0, tot = 0, count = 0;
-    long long history_interval =
-        config.interval ? config.interval/1000 :
-                          LATENCY_HISTORY_DEFAULT_INTERVAL;
+    long long history_interval = config.interval ? config.interval / 1000 : LATENCY_HISTORY_DEFAULT_INTERVAL;
     double avg;
     long long history_start = mstime();
 
     if (!context) exit(1);
-    while(1) {
+    while (1) {
         start = mstime();
-        reply = redisCommand(context,"PING");
+        reply = redisCommand(context, "PING");
         if (reply == NULL) {
-            fprintf(stderr,"\nI/O error\n");
+            fprintf(stderr, "\nI/O error\n");
             exit(1);
         }
-        latency = mstime()-start;
+        latency = mstime() - start;
         freeReplyObject(reply);
         count++;
         if (count == 1) {
@@ -1037,14 +1017,12 @@ static void latencyMode(void) {
             if (latency < min) min = latency;
             if (latency > max) max = latency;
             tot += latency;
-            avg = (double) tot/count;
+            avg = (double) tot / count;
         }
-        printf("\x1b[0G\x1b[2Kmin: %lld, max: %lld, avg: %.2f (%lld samples)",
-            min, max, avg, count);
+        printf("\x1b[0G\x1b[2Kmin: %lld, max: %lld, avg: %.2f (%lld samples)", min, max, avg, count);
         fflush(stdout);
-        if (config.latency_history && mstime()-history_start > history_interval)
-        {
-            printf(" -- %.2f seconds range\n", (float)(mstime()-history_start)/1000);
+        if (config.latency_history && mstime() - history_start > history_interval) {
+            printf(" -- %.2f seconds range\n", (float) (mstime() - history_start) / 1000);
             history_start = mstime();
             min = max = tot = count = 0;
         }
@@ -1067,17 +1045,17 @@ unsigned long long sendSync(int fd) {
     ssize_t nread;
 
     /* Send the SYNC command. */
-    if (write(fd,"SYNC\r\n",6) != 6) {
-        fprintf(stderr,"Error writing to master\n");
+    if (write(fd, "SYNC\r\n", 6) != 6) {
+        fprintf(stderr, "Error writing to master\n");
         exit(1);
     }
 
     /* Read $<payload>\r\n, making sure to read just up to "\n" */
     p = buf;
-    while(1) {
-        nread = read(fd,p,1);
+    while (1) {
+        nread = read(fd, p, 1);
         if (nread <= 0) {
-            fprintf(stderr,"Error reading bulk length while SYNCing\n");
+            fprintf(stderr, "Error reading bulk length while SYNCing\n");
             exit(1);
         }
         if (*p == '\n' && p != buf) break;
@@ -1088,7 +1066,7 @@ unsigned long long sendSync(int fd) {
         printf("SYNC with master failed: %s\n", buf);
         exit(1);
     }
-    return strtoull(buf+1,NULL,10);
+    return strtoull(buf + 1, NULL, 10);
 }
 
 static void slaveMode(void) {
@@ -1097,21 +1075,21 @@ static void slaveMode(void) {
     char buf[1024];
     int original_output = config.output;
 
-    fprintf(stderr,"SYNC with master, discarding %llu "
-                   "bytes of bulk transfer...\n", payload);
+    fprintf(stderr, "SYNC with master, discarding %llu "
+                    "bytes of bulk transfer...\n", payload);
 
     /* Discard the payload. */
-    while(payload) {
+    while (payload) {
         ssize_t nread;
 
-        nread = read(fd,buf,(payload > sizeof(buf)) ? sizeof(buf) : payload);
+        nread = read(fd, buf, (payload > sizeof(buf)) ? sizeof(buf) : payload);
         if (nread <= 0) {
-            fprintf(stderr,"Error reading RDB payload while SYNCing\n");
+            fprintf(stderr, "Error reading RDB payload while SYNCing\n");
             exit(1);
         }
         payload -= nread;
     }
-    fprintf(stderr,"SYNC done. Logging commands from master.\n");
+    fprintf(stderr, "SYNC done. Logging commands from master.\n");
 
     /* Now we can use hiredis to read the incoming protocol. */
     config.output = OUTPUT_CSV;
@@ -1131,40 +1109,37 @@ static void getRDB(void) {
     unsigned long long payload = sendSync(s);
     char buf[4096];
 
-    fprintf(stderr,"SYNC sent to master, writing %llu bytes to '%s'\n",
-        payload, config.rdb_filename);
+    fprintf(stderr, "SYNC sent to master, writing %llu bytes to '%s'\n", payload, config.rdb_filename);
 
     /* Write to file. */
-    if (!strcmp(config.rdb_filename,"-")) {
+    if (!strcmp(config.rdb_filename, "-")) {
         fd = STDOUT_FILENO;
     } else {
-        fd = open(config.rdb_filename, O_CREAT|O_WRONLY, 0644);
+        fd = open(config.rdb_filename, O_CREAT | O_WRONLY, 0644);
         if (fd == -1) {
-            fprintf(stderr, "Error opening '%s': %s\n", config.rdb_filename,
-                strerror(errno));
+            fprintf(stderr, "Error opening '%s': %s\n", config.rdb_filename, strerror(errno));
             exit(1);
         }
     }
 
-    while(payload) {
+    while (payload) {
         ssize_t nread, nwritten;
-        
-        nread = read(s,buf,(payload > sizeof(buf)) ? sizeof(buf) : payload);
+
+        nread = read(s, buf, (payload > sizeof(buf)) ? sizeof(buf) : payload);
         if (nread <= 0) {
-            fprintf(stderr,"I/O Error reading RDB payload from socket\n");
+            fprintf(stderr, "I/O Error reading RDB payload from socket\n");
             exit(1);
         }
         nwritten = write(fd, buf, nread);
         if (nwritten != nread) {
-            fprintf(stderr,"Error writing data to file: %s\n",
-                strerror(errno));
+            fprintf(stderr, "Error writing data to file: %s\n", strerror(errno));
             exit(1);
         }
         payload -= nread;
     }
     close(s); /* Close the file descriptor ASAP as fsync() may take time. */
     fsync(fd);
-    fprintf(stderr,"Transfer finished with success.\n");
+    fprintf(stderr, "Transfer finished with success.\n");
     exit(0);
 }
 
@@ -1175,7 +1150,7 @@ static void getRDB(void) {
 static void pipeMode(void) {
     int fd = context->fd;
     long long errors = 0, replies = 0, obuf_len = 0, obuf_pos = 0;
-    char ibuf[1024*16], obuf[1024*16]; /* Input and output buffers */
+    char ibuf[1024 * 16], obuf[1024 * 16]; /* Input and output buffers */
     char aneterr[ANET_ERR_LEN];
     redisReader *reader = redisReaderCreate();
     redisReply *reply;
@@ -1187,19 +1162,18 @@ static void pipeMode(void) {
     srand(time(NULL));
 
     /* Use non blocking I/O. */
-    if (anetNonBlock(aneterr,fd) == ANET_ERR) {
-        fprintf(stderr, "Can't set the socket in non blocking mode: %s\n",
-            aneterr);
+    if (anetNonBlock(aneterr, fd) == ANET_ERR) {
+        fprintf(stderr, "Can't set the socket in non blocking mode: %s\n", aneterr);
         exit(1);
     }
 
     /* Transfer raw protocol and read replies from the server at the same
      * time. */
-    while(!done) {
+    while (!done) {
         int mask = AE_READABLE;
 
         if (!eof || obuf_len != 0) mask |= AE_WRITABLE;
-        mask = aeWait(fd,mask,1000);
+        mask = aeWait(fd, mask, 1000);
 
         /* Handle the readable state: we can read replies from the server. */
         if (mask & AE_READABLE) {
@@ -1207,34 +1181,32 @@ static void pipeMode(void) {
 
             /* Read from socket and feed the hiredis reader. */
             do {
-                nread = read(fd,ibuf,sizeof(ibuf));
+                nread = read(fd, ibuf, sizeof(ibuf));
                 if (nread == -1 && errno != EAGAIN && errno != EINTR) {
-                    fprintf(stderr, "Error reading from the server: %s\n",
-                        strerror(errno));
+                    fprintf(stderr, "Error reading from the server: %s\n", strerror(errno));
                     exit(1);
                 }
                 if (nread > 0) {
-                    redisReaderFeed(reader,ibuf,nread);
+                    redisReaderFeed(reader, ibuf, nread);
                     last_read_time = time(NULL);
                 }
-            } while(nread > 0);
+            } while (nread > 0);
 
             /* Consume replies. */
             do {
-                if (redisReaderGetReply(reader,(void**)&reply) == REDIS_ERR) {
+                if (redisReaderGetReply(reader, (void **) &reply) == REDIS_ERR) {
                     fprintf(stderr, "Error reading replies from server\n");
                     exit(1);
                 }
                 if (reply) {
                     if (reply->type == REDIS_REPLY_ERROR) {
-                        fprintf(stderr,"%s\n", reply->str);
+                        fprintf(stderr, "%s\n", reply->str);
                         errors++;
-                    } else if (eof && reply->type == REDIS_REPLY_STRING &&
-                                      reply->len == 20) {
+                    } else if (eof && reply->type == REDIS_REPLY_STRING && reply->len == 20) {
                         /* Check if this is the reply to our final ECHO 
                          * command. If so everything was received
                          * from the server. */
-                        if (memcmp(reply->str,magic,20) == 0) {
+                        if (memcmp(reply->str, magic, 20) == 0) {
                             printf("Last reply received from server.\n");
                             done = 1;
                             replies--;
@@ -1243,20 +1215,19 @@ static void pipeMode(void) {
                     replies++;
                     freeReplyObject(reply);
                 }
-            } while(reply);
+            } while (reply);
         }
 
         /* Handle the writable state: we can send protocol to the server. */
         if (mask & AE_WRITABLE) {
-            while(1) {
+            while (1) {
                 /* Transfer current buffer to server. */
                 if (obuf_len != 0) {
-                    ssize_t nwritten = write(fd,obuf+obuf_pos,obuf_len);
-                    
+                    ssize_t nwritten = write(fd, obuf + obuf_pos, obuf_len);
+
                     if (nwritten == -1) {
                         if (errno != EAGAIN && errno != EINTR) {
-                            fprintf(stderr, "Error writing to the server: %s\n",
-                                strerror(errno));
+                            fprintf(stderr, "Error writing to the server: %s\n", strerror(errno));
                             exit(1);
                         } else {
                             nwritten = 0;
@@ -1268,15 +1239,14 @@ static void pipeMode(void) {
                 }
                 /* If buffer is empty, load from stdin. */
                 if (obuf_len == 0 && !eof) {
-                    ssize_t nread = read(STDIN_FILENO,obuf,sizeof(obuf));
+                    ssize_t nread = read(STDIN_FILENO, obuf, sizeof(obuf));
 
                     if (nread == 0) {
                         /* The ECHO sequence starts with a "\r\n" so that if there
                          * is garbage in the protocol we read from stdin, the ECHO
                          * will likely still be properly formatted.
                          * CRLF is ignored by Redis, so it has no effects. */
-                        char echo[] =
-                        "\r\n*2\r\n$4\r\nECHO\r\n$20\r\n01234567890123456789\r\n";
+                        char echo[] = "\r\n*2\r\n$4\r\nECHO\r\n$20\r\n01234567890123456789\r\n";
                         int j;
 
                         eof = 1;
@@ -1285,14 +1255,13 @@ static void pipeMode(void) {
                          * to make sure everything was read from the server. */
                         for (j = 0; j < 20; j++)
                             magic[j] = rand() & 0xff;
-                        memcpy(echo+21,magic,20);
-                        memcpy(obuf,echo,sizeof(echo)-1);
-                        obuf_len = sizeof(echo)-1;
+                        memcpy(echo + 21, magic, 20);
+                        memcpy(obuf, echo, sizeof(echo) - 1);
+                        obuf_len = sizeof(echo) - 1;
                         obuf_pos = 0;
                         printf("All data transferred. Waiting for the last reply...\n");
                     } else if (nread == -1) {
-                        fprintf(stderr, "Error reading from stdin: %s\n",
-                            strerror(errno));
+                        fprintf(stderr, "Error reading from stdin: %s\n", strerror(errno));
                         exit(1);
                     } else {
                         obuf_len = nread;
@@ -1306,11 +1275,8 @@ static void pipeMode(void) {
         /* Handle timeout, that is, we reached EOF, and we are not getting
          * replies from the server for a few seconds, nor the final ECHO is
          * received. */
-        if (eof && config.pipe_timeout > 0 &&
-            time(NULL)-last_read_time > config.pipe_timeout)
-        {
-            fprintf(stderr,"No replies for %d seconds: exiting.\n",
-                config.pipe_timeout);
+        if (eof && config.pipe_timeout > 0 && time(NULL) - last_read_time > config.pipe_timeout) {
+            fprintf(stderr, "No replies for %d seconds: exiting.\n", config.pipe_timeout);
             errors++;
             break;
         }
@@ -1338,16 +1304,16 @@ static redisReply *sendScan(unsigned long long *it) {
     redisReply *reply = redisCommand(context, "SCAN %llu", *it);
 
     /* Handle any error conditions */
-    if(reply == NULL) {
+    if (reply == NULL) {
         fprintf(stderr, "\nI/O error\n");
         exit(1);
-    } else if(reply->type == REDIS_REPLY_ERROR) {
+    } else if (reply->type == REDIS_REPLY_ERROR) {
         fprintf(stderr, "SCAN error: %s\n", reply->str);
         exit(1);
-    } else if(reply->type != REDIS_REPLY_ARRAY) {
+    } else if (reply->type != REDIS_REPLY_ARRAY) {
         fprintf(stderr, "Non ARRAY response from SCAN!\n");
         exit(1);
-    } else if(reply->elements != 2) {
+    } else if (reply->elements != 2) {
         fprintf(stderr, "Invalid element count from SCAN!\n");
         exit(1);
     }
@@ -1355,7 +1321,7 @@ static redisReply *sendScan(unsigned long long *it) {
     /* Validate our types are correct */
     assert(reply->element[0]->type == REDIS_REPLY_STRING);
     assert(reply->element[1]->type == REDIS_REPLY_ARRAY);
-    
+
     /* Update iterator */
     *it = atoi(reply->element[0]->str);
 
@@ -1367,8 +1333,8 @@ static int getDbSize(void) {
     int size;
 
     reply = redisCommand(context, "DBSIZE");
-    
-    if(reply == NULL || reply->type != REDIS_REPLY_INTEGER) {
+
+    if (reply == NULL || reply->type != REDIS_REPLY_INTEGER) {
         fprintf(stderr, "Couldn't determine DBSIZE!\n");
         exit(1);
     }
@@ -1381,17 +1347,17 @@ static int getDbSize(void) {
 }
 
 static int toIntType(char *key, char *type) {
-    if(!strcmp(type, "string")) {
+    if (!strcmp(type, "string")) {
         return TYPE_STRING;
-    } else if(!strcmp(type, "list")) {
+    } else if (!strcmp(type, "list")) {
         return TYPE_LIST;
-    } else if(!strcmp(type, "set")) {
+    } else if (!strcmp(type, "set")) {
         return TYPE_SET;
-    } else if(!strcmp(type, "hash")) {
+    } else if (!strcmp(type, "hash")) {
         return TYPE_HASH;
-    } else if(!strcmp(type, "zset")) {
+    } else if (!strcmp(type, "zset")) {
         return TYPE_ZSET;
-    } else if(!strcmp(type, "none")) {
+    } else if (!strcmp(type, "none")) {
         return TYPE_NONE;
     } else {
         fprintf(stderr, "Unknown type '%s' for key '%s'\n", type, key);
@@ -1404,80 +1370,75 @@ static void getKeyTypes(redisReply *keys, int *types) {
     int i;
 
     /* Pipeline TYPE commands */
-    for(i=0;i<keys->elements;i++) {
+    for (i = 0; i < keys->elements; i++) {
         redisAppendCommand(context, "TYPE %s", keys->element[i]->str);
     }
 
     /* Retrieve types */
-    for(i=0;i<keys->elements;i++) {
-        if(redisGetReply(context, (void**)&reply)!=REDIS_OK) {
-            fprintf(stderr, "Error getting type for key '%s' (%d: %s)\n",
-                keys->element[i]->str, context->err, context->errstr);
+    for (i = 0; i < keys->elements; i++) {
+        if (redisGetReply(context, (void **) &reply) != REDIS_OK) {
+            fprintf(stderr, "Error getting type for key '%s' (%d: %s)\n", keys->element[i]->str, context->err,
+                    context->errstr);
             exit(1);
-        } else if(reply->type != REDIS_REPLY_STATUS) {
-            fprintf(stderr, "Invalid reply type (%d) for TYPE on key '%s'!\n",
-                reply->type, keys->element[i]->str);
+        } else if (reply->type != REDIS_REPLY_STATUS) {
+            fprintf(stderr, "Invalid reply type (%d) for TYPE on key '%s'!\n", reply->type, keys->element[i]->str);
             exit(1);
         }
 
-        types[i] = toIntType(keys->element[i]->str, reply->str); 
+        types[i] = toIntType(keys->element[i]->str, reply->str);
         freeReplyObject(reply);
     }
 }
 
-static void getKeySizes(redisReply *keys, int *types, 
-                        unsigned long long *sizes) 
-{
+static void getKeySizes(redisReply *keys, int *types, unsigned long long *sizes) {
     redisReply *reply;
-    char *sizecmds[] = {"STRLEN","LLEN","SCARD","HLEN","ZCARD"};
+    char *sizecmds[] = {"STRLEN", "LLEN", "SCARD", "HLEN", "ZCARD"};
     int i;
 
     /* Pipeline size commands */
-    for(i=0;i<keys->elements;i++) {
+    for (i = 0; i < keys->elements; i++) {
         /* Skip keys that were deleted */
-        if(types[i]==TYPE_NONE) 
+        if (types[i] == TYPE_NONE)
             continue;
 
-        redisAppendCommand(context, "%s %s", sizecmds[types[i]], 
-            keys->element[i]->str);
+        redisAppendCommand(context, "%s %s", sizecmds[types[i]], keys->element[i]->str);
     }
 
     /* Retreive sizes */
-    for(i=0;i<keys->elements;i++) {
+    for (i = 0; i < keys->elements; i++) {
         /* Skip keys that dissapeared between SCAN and TYPE */
-        if(types[i] == TYPE_NONE) {
+        if (types[i] == TYPE_NONE) {
             sizes[i] = 0;
             continue;
         }
 
         /* Retreive size */
-        if(redisGetReply(context, (void**)&reply)!=REDIS_OK) {
-            fprintf(stderr, "Error getting size for key '%s' (%d: %s)\n",
-                keys->element[i]->str, context->err, context->errstr);
+        if (redisGetReply(context, (void **) &reply) != REDIS_OK) {
+            fprintf(stderr, "Error getting size for key '%s' (%d: %s)\n", keys->element[i]->str, context->err,
+                    context->errstr);
             exit(1);
-        } else if(reply->type != REDIS_REPLY_INTEGER) {
+        } else if (reply->type != REDIS_REPLY_INTEGER) {
             /* Theoretically the key could have been removed and
              * added as a different type between TYPE and SIZE */
-            fprintf(stderr, 
-                "Warning:  %s on '%s' failed (may have changed type)\n",
-                 sizecmds[types[i]], keys->element[i]->str);
+            fprintf(stderr, "Warning:  %s on '%s' failed (may have changed type)\n", sizecmds[types[i]],
+                    keys->element[i]->str);
             sizes[i] = 0;
         } else {
             sizes[i] = reply->integer;
         }
-            
+
         freeReplyObject(reply);
     }
 }
 
 static void findBigKeys(void) {
     unsigned long long biggest[5] = {0}, counts[5] = {0}, totalsize[5] = {0};
-    unsigned long long sampled = 0, total_keys, totlen=0, *sizes=NULL, it=0;
+    unsigned long long sampled = 0, total_keys, totlen = 0, *sizes = NULL, it = 0;
     sds maxkeys[5] = {0};
-    char *typename[] = {"string","list","set","hash","zset"};
-    char *typeunit[] = {"bytes","items","members","fields","members"};
+    char *typename[] = {"string", "list", "set", "hash", "zset"};
+    char *typeunit[] = {"bytes", "items", "members", "fields", "members"};
     redisReply *reply, *keys;
-    int type, *types=NULL, arrsize=0, i;
+    int type, *types = NULL, arrsize = 0, i;
     double pct;
 
     /* Total keys pre scanning */
@@ -1489,9 +1450,9 @@ static void findBigKeys(void) {
     printf("# per 100 SCAN commands (not usually needed).\n\n");
 
     /* New up sds strings to keep track of overall biggest per type */
-    for(i=0;i<TYPE_NONE; i++) {
+    for (i = 0; i < TYPE_NONE; i++) {
         maxkeys[i] = sdsempty();
-        if(!maxkeys[i]) {
+        if (!maxkeys[i]) {
             fprintf(stderr, "Failed to allocate memory for largest key names!");
             exit(1);
         }
@@ -1500,18 +1461,18 @@ static void findBigKeys(void) {
     /* SCAN loop */
     do {
         /* Calculate approximate percentage completion */
-        pct = 100 * (double)sampled/total_keys;
+        pct = 100 * (double) sampled / total_keys;
 
         /* Grab some keys and point to the keys array */
         reply = sendScan(&it);
-        keys  = reply->element[1];
+        keys = reply->element[1];
 
         /* Reallocate our type and size array if we need to */
-        if(keys->elements > arrsize) {
-            types = zrealloc(types, sizeof(int)*keys->elements);
-            sizes = zrealloc(sizes, sizeof(unsigned long long)*keys->elements);
+        if (keys->elements > arrsize) {
+            types = zrealloc(types, sizeof(int) * keys->elements);
+            sizes = zrealloc(sizes, sizeof(unsigned long long) * keys->elements);
 
-            if(!types || !sizes) {
+            if (!types || !sizes) {
                 fprintf(stderr, "Failed to allocate storage for keys!\n");
                 exit(1);
             }
@@ -1522,77 +1483,72 @@ static void findBigKeys(void) {
         /* Retreive types and then sizes */
         getKeyTypes(keys, types);
         getKeySizes(keys, types, sizes);
-        
+
         /* Now update our stats */
-        for(i=0;i<keys->elements;i++) {
-            if((type = types[i]) == TYPE_NONE)
+        for (i = 0; i < keys->elements; i++) {
+            if ((type = types[i]) == TYPE_NONE)
                 continue;
-            
+
             totalsize[type] += sizes[i];
             counts[type]++;
             totlen += keys->element[i]->len;
             sampled++;
 
-            if(biggest[type]<sizes[i]) {
-                printf(
-                   "[%05.2f%%] Biggest %-6s found so far '%s' with %llu %s\n",
-                   pct, typename[type], keys->element[i]->str, sizes[i],
-                   typeunit[type]);
+            if (biggest[type] < sizes[i]) {
+                printf("[%05.2f%%] Biggest %-6s found so far '%s' with %llu %s\n", pct, typename[type],
+                       keys->element[i]->str, sizes[i], typeunit[type]);
 
                 /* Keep track of biggest key name for this type */
                 maxkeys[type] = sdscpy(maxkeys[type], keys->element[i]->str);
-                if(!maxkeys[type]) {
+                if (!maxkeys[type]) {
                     fprintf(stderr, "Failed to allocate memory for key!\n");
                     exit(1);
                 }
 
                 /* Keep track of the biggest size for this type */
-                biggest[type] = sizes[i];                
+                biggest[type] = sizes[i];
             }
 
             /* Update overall progress */
-            if(sampled % 1000000 == 0) {
+            if (sampled % 1000000 == 0) {
                 printf("[%05.2f%%] Sampled %llu keys so far\n", pct, sampled);
             }
         }
 
         /* Sleep if we've been directed to do so */
-        if(sampled && (sampled %100) == 0 && config.interval) {
+        if (sampled && (sampled % 100) == 0 && config.interval) {
             usleep(config.interval);
         }
-        
-        freeReplyObject(reply);
-    } while(it != 0);
 
-    if(types) zfree(types);
-    if(sizes) zfree(sizes);
+        freeReplyObject(reply);
+    } while (it != 0);
+
+    if (types) zfree(types);
+    if (sizes) zfree(sizes);
 
     /* We're done */
     printf("\n-------- summary -------\n\n");
 
     printf("Sampled %llu keys in the keyspace!\n", sampled);
-    printf("Total key length in bytes is %llu (avg len %.2f)\n\n",
-       totlen, totlen ? (double)totlen/sampled : 0);
+    printf("Total key length in bytes is %llu (avg len %.2f)\n\n", totlen, totlen ? (double) totlen / sampled : 0);
 
     /* Output the biggest keys we found, for types we did find */
-    for(i=0;i<TYPE_NONE;i++) {
-        if(sdslen(maxkeys[i])>0) {
-            printf("Biggest %6s found '%s' has %llu %s\n", typename[i], maxkeys[i],
-               biggest[i], typeunit[i]);
+    for (i = 0; i < TYPE_NONE; i++) {
+        if (sdslen(maxkeys[i]) > 0) {
+            printf("Biggest %6s found '%s' has %llu %s\n", typename[i], maxkeys[i], biggest[i], typeunit[i]);
         }
     }
 
     printf("\n");
 
-    for(i=0;i<TYPE_NONE;i++) {
-        printf("%llu %ss with %llu %s (%05.2f%% of keys, avg size %.2f)\n",
-           counts[i], typename[i], totalsize[i], typeunit[i],
-           sampled ? 100 * (double)counts[i]/sampled : 0,
-           counts[i] ? (double)totalsize[i]/counts[i] : 0);
+    for (i = 0; i < TYPE_NONE; i++) {
+        printf("%llu %ss with %llu %s (%05.2f%% of keys, avg size %.2f)\n", counts[i], typename[i], totalsize[i],
+               typeunit[i], sampled ? 100 * (double) counts[i] / sampled : 0,
+               counts[i] ? (double) totalsize[i] / counts[i] : 0);
     }
 
     /* Free sds strings containing max keys */
-    for(i=0;i<TYPE_NONE;i++) {
+    for (i = 0; i < TYPE_NONE; i++) {
         sdsfree(maxkeys[i]);
     }
 
@@ -1608,29 +1564,29 @@ static void findBigKeys(void) {
  * A new buffer is allocated for the result, that needs to be free'd.
  * If the field is not found NULL is returned. */
 static char *getInfoField(char *info, char *field) {
-    char *p = strstr(info,field);
+    char *p = strstr(info, field);
     char *n1, *n2;
     char *result;
 
     if (!p) return NULL;
-    p += strlen(field)+1;
-    n1 = strchr(p,'\r');
-    n2 = strchr(p,',');
+    p += strlen(field) + 1;
+    n1 = strchr(p, '\r');
+    n2 = strchr(p, ',');
     if (n2 && n2 < n1) n1 = n2;
-    result = malloc(sizeof(char)*(n1-p)+1);
-    memcpy(result,p,(n1-p));
-    result[n1-p] = '\0';
+    result = malloc(sizeof(char) * (n1 - p) + 1);
+    memcpy(result, p, (n1 - p));
+    result[n1 - p] = '\0';
     return result;
 }
 
 /* Like the above function but automatically convert the result into
  * a long. On error (missing field) LONG_MIN is returned. */
 static long getLongInfoField(char *info, char *field) {
-    char *value = getInfoField(info,field);
+    char *value = getInfoField(info, field);
     long l;
 
     if (!value) return LONG_MIN;
-    l = strtol(value,NULL,10);
+    l = strtol(value, NULL, 10);
     free(value);
     return l;
 }
@@ -1647,17 +1603,17 @@ void bytesToHuman(char *s, long long n) {
     }
     if (n < 1024) {
         /* Bytes */
-        sprintf(s,"%lluB",n);
+        sprintf(s, "%lluB", n);
         return;
-    } else if (n < (1024*1024)) {
-        d = (double)n/(1024);
-        sprintf(s,"%.2fK",d);
-    } else if (n < (1024LL*1024*1024)) {
-        d = (double)n/(1024*1024);
-        sprintf(s,"%.2fM",d);
-    } else if (n < (1024LL*1024*1024*1024)) {
-        d = (double)n/(1024LL*1024*1024);
-        sprintf(s,"%.2fG",d);
+    } else if (n < (1024 * 1024)) {
+        d = (double) n / (1024);
+        sprintf(s, "%.2fK", d);
+    } else if (n < (1024LL * 1024 * 1024)) {
+        d = (double) n / (1024 * 1024);
+        sprintf(s, "%.2fM", d);
+    } else if (n < (1024LL * 1024 * 1024 * 1024)) {
+        d = (double) n / (1024LL * 1024 * 1024);
+        sprintf(s, "%.2fG", d);
     }
 }
 
@@ -1666,7 +1622,7 @@ static void statMode() {
     long aux, requests = 0;
     int i = 0;
 
-    while(1) {
+    while (1) {
         char buf[64];
         int j;
 
@@ -1677,9 +1633,8 @@ static void statMode() {
         }
 
         if ((i++ % 20) == 0) {
-            printf(
-"------- data ------ --------------------- load -------------------- - child -\n"
-"keys       mem      clients blocked requests            connections          \n");
+            printf("------- data ------ --------------------- load -------------------- - child -\n"
+                   "keys       mem      clients blocked requests            connections          \n");
         }
 
         /* Keys */
@@ -1687,54 +1642,55 @@ static void statMode() {
         for (j = 0; j < 20; j++) {
             long k;
 
-            sprintf(buf,"db%d:keys",j);
-            k = getLongInfoField(reply->str,buf);
+            sprintf(buf, "db%d:keys", j);
+            k = getLongInfoField(reply->str, buf);
             if (k == LONG_MIN) continue;
             aux += k;
         }
-        sprintf(buf,"%ld",aux);
-        printf("%-11s",buf);
+        sprintf(buf, "%ld", aux);
+        printf("%-11s", buf);
 
         /* Used memory */
-        aux = getLongInfoField(reply->str,"used_memory");
-        bytesToHuman(buf,aux);
-        printf("%-8s",buf);
+        aux = getLongInfoField(reply->str, "used_memory");
+        bytesToHuman(buf, aux);
+        printf("%-8s", buf);
 
         /* Clients */
-        aux = getLongInfoField(reply->str,"connected_clients");
-        sprintf(buf,"%ld",aux);
-        printf(" %-8s",buf);
+        aux = getLongInfoField(reply->str, "connected_clients");
+        sprintf(buf, "%ld", aux);
+        printf(" %-8s", buf);
 
         /* Blocked (BLPOPPING) Clients */
-        aux = getLongInfoField(reply->str,"blocked_clients");
-        sprintf(buf,"%ld",aux);
-        printf("%-8s",buf);
+        aux = getLongInfoField(reply->str, "blocked_clients");
+        sprintf(buf, "%ld", aux);
+        printf("%-8s", buf);
 
         /* Requets */
-        aux = getLongInfoField(reply->str,"total_commands_processed");
-        sprintf(buf,"%ld (+%ld)",aux,requests == 0 ? 0 : aux-requests);
-        printf("%-19s",buf);
+        aux = getLongInfoField(reply->str, "total_commands_processed");
+        sprintf(buf, "%ld (+%ld)", aux, requests == 0 ? 0 : aux - requests);
+        printf("%-19s", buf);
         requests = aux;
 
         /* Connections */
-        aux = getLongInfoField(reply->str,"total_connections_received");
-        sprintf(buf,"%ld",aux);
-        printf(" %-12s",buf);
+        aux = getLongInfoField(reply->str, "total_connections_received");
+        sprintf(buf, "%ld", aux);
+        printf(" %-12s", buf);
 
         /* Children */
-        aux = getLongInfoField(reply->str,"bgsave_in_progress");
-        aux |= getLongInfoField(reply->str,"aof_rewrite_in_progress") << 1;
-        switch(aux) {
-        case 0: break;
-        case 1:
-            printf("SAVE");
-            break;
-        case 2:
-            printf("AOF");
-            break;
-        case 3:
-            printf("SAVE+AOF");
-            break;
+        aux = getLongInfoField(reply->str, "bgsave_in_progress");
+        aux |= getLongInfoField(reply->str, "aof_rewrite_in_progress") << 1;
+        switch (aux) {
+            case 0:
+                break;
+            case 1:
+                printf("SAVE");
+                break;
+            case 2:
+                printf("AOF");
+                break;
+            case 3:
+                printf("SAVE+AOF");
+                break;
         }
 
         printf("\n");
@@ -1753,10 +1709,9 @@ static void scanMode() {
 
     do {
         if (config.pattern)
-            reply = redisCommand(context,"SCAN %llu MATCH %s",
-                cur,config.pattern);
+            reply = redisCommand(context, "SCAN %llu MATCH %s", cur, config.pattern);
         else
-            reply = redisCommand(context,"SCAN %llu",cur);
+            reply = redisCommand(context, "SCAN %llu", cur);
         if (reply == NULL) {
             printf("I/O error\n");
             exit(1);
@@ -1766,12 +1721,12 @@ static void scanMode() {
         } else {
             int j;
 
-            cur = strtoull(reply->element[0]->str,NULL,10);
+            cur = strtoull(reply->element[0]->str, NULL, 10);
             for (j = 0; j < reply->element[1]->elements; j++)
                 printf("%s\n", reply->element[1]->element[j]->str);
         }
         freeReplyObject(reply);
-    } while(cur != 0);
+    } while (cur != 0);
 
     exit(0);
 }
@@ -1796,13 +1751,13 @@ unsigned long compute_something_fast(void) {
 
     i = 0;
     j = 0;
-    while(count--) {
+    while (count--) {
         i++;
         j = j + s[i];
         t = s[i];
         s[i] = s[j];
         s[j] = t;
-        output += s[(s[i]+s[j])&255];
+        output += s[(s[i] + s[j]) & 255];
     }
     return output;
 }
@@ -1810,16 +1765,16 @@ unsigned long compute_something_fast(void) {
 static void intrinsicLatencyMode(void) {
     long long test_end, run_time, max_latency = 0, runs = 0;
 
-    run_time = config.intrinsic_latency_duration*1000000;
+    run_time = config.intrinsic_latency_duration * 1000000;
     test_end = ustime() + run_time;
 
-    while(1) {
+    while (1) {
         long long start, end, latency;
 
         start = ustime();
         compute_something_fast();
         end = ustime();
-        latency = end-start;
+        latency = end - start;
         runs++;
         if (latency <= 0) continue;
 
@@ -1830,10 +1785,8 @@ static void intrinsicLatencyMode(void) {
         }
 
         if (end > test_end) {
-            printf("\n%lld total runs (avg %lld microseconds per run).\n",
-                runs, run_time/runs);
-            printf("Worst run took %.02fx times the avarege.\n",
-                (double) max_latency / (run_time/runs));
+            printf("\n%lld total runs (avg %lld microseconds per run).\n", runs, run_time / runs);
+            printf("Worst run took %.02fx times the avarege.\n", (double) max_latency / (run_time / runs));
             exit(0);
         }
     }
@@ -1844,7 +1797,7 @@ static void intrinsicLatencyMode(void) {
  *--------------------------------------------------------------------------- */
 // 客户端主函数
 int main(int argc, char **argv) {
-    fprintf(stderr, "cli main running\n");
+    fprintf(stderr, "heyifeng_learn client main running");
     int firstarg;
 
     config.hostip = sdsnew("127.0.0.1");
@@ -1880,7 +1833,7 @@ int main(int argc, char **argv) {
     config.mb_delim = sdsnew("\n");
     cliInitHelp();
 
-    firstarg = parseOptions(argc,argv);
+    firstarg = parseOptions(argc, argv);
     argc -= firstarg;
     argv += firstarg;
 
@@ -1941,8 +1894,8 @@ int main(int argc, char **argv) {
     /* Otherwise, we have some arguments to execute */
     if (cliConnect(0) != REDIS_OK) exit(1);
     if (config.eval) {
-        return evalMode(argc,argv);
+        return evalMode(argc, argv);
     } else {
-        return noninteractive(argc,convertToSds(argc,argv));
+        return noninteractive(argc, convertToSds(argc, argv));
     }
 }

@@ -39,7 +39,7 @@
 /* The current RDB version. When the format changes in a way that is no longer
  * backward compatible this number gets incremented.
  *
- * RDB 的版本，当新版本不向就版本兼容时，增一
+ * RDB 的版本,当新版本不向就版本兼容时,增一
  */
 #define REDIS_RDB_VERSION 6
 
@@ -53,7 +53,7 @@
  *              长度编码在这一字节的其余 6 位中
  *
  * 01|000000 00000000 =>  01, the len is 14 byes, 6 bits + 8 bits of next byte
- *                        长度为 14 位，当前字节 6 位，加上下个字节 8 位
+ *                        长度为 14 位,当前字节 6 位,加上下个字节 8 位
  *
  * 10|000000 [32 bit integer] => if it's 01, a full 32 bit len will follow
  *                               长度由后跟的 32 位保存
@@ -67,8 +67,8 @@
  * Lenghts up to 63 are stored using a single byte, most DB keys, and may
  * values, will fit inside. 
  *
- * 一个字节（的其中 6 个字节）可以保存的最大长度是 63 （包括在内），
- * 对于大多数键和值来说，都已经足够了。
+ * 一个字节（的其中 6 个字节）可以保存的最大长度是 63 （包括在内）,
+ * 对于大多数键和值来说,都已经足够了。
  */
 #define REDIS_RDB_6BITLEN 0
 #define REDIS_RDB_14BITLEN 1
@@ -81,7 +81,7 @@
  * set, the remaining two bits specify a special encoding for the object
  * accordingly to the following defines:
  *
- * 当对象是一个字符串对象时，
+ * 当对象是一个字符串对象时,
  * 最高两个位之后的两个位（第 3 个位和第 4 个位）指定了对象的特殊编码
  */
 #define REDIS_RDB_ENC_INT8 0        /* 8 bit signed integer */
@@ -130,23 +130,41 @@
 #define REDIS_RDB_OPCODE_EOF        255
 
 int rdbSaveType(rio *rdb, unsigned char type);
+
 int rdbLoadType(rio *rdb);
+
 int rdbSaveTime(rio *rdb, time_t t);
+
 time_t rdbLoadTime(rio *rdb);
+
 int rdbSaveLen(rio *rdb, uint32_t len);
+
 uint32_t rdbLoadLen(rio *rdb, int *isencoded);
+
 int rdbSaveObjectType(rio *rdb, robj *o);
+
 int rdbLoadObjectType(rio *rdb);
+
 int rdbLoad(char *filename);
+
 int rdbSaveBackground(char *filename);
+
 void rdbRemoveTempFile(pid_t childpid);
+
 int rdbSave(char *filename);
+
 int rdbSaveObject(rio *rdb, robj *o);
+
 off_t rdbSavedObjectLen(robj *o);
+
 off_t rdbSavedObjectPages(robj *o);
+
 robj *rdbLoadObject(int type, rio *rdb);
+
 void backgroundSaveDoneHandler(int exitcode, int bysignal);
+
 int rdbSaveKeyValuePair(rio *rdb, robj *key, robj *val, long long expiretime, long long now);
+
 robj *rdbLoadStringObject(rio *rdb);
 
 #endif
