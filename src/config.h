@@ -102,7 +102,7 @@
 #ifdef HAVE_SYNC_FILE_RANGE
 #define rdb_fsync_range(fd,off,size) sync_file_range(fd,off,size,SYNC_FILE_RANGE_WAIT_BEFORE|SYNC_FILE_RANGE_WRITE)
 #else
-#define rdb_fsync_range(fd,off,size) fsync(fd)
+#define rdb_fsync_range(fd, off, size) fsync(fd)
 #endif
 
 /* Check if we can use setproctitle().
@@ -129,9 +129,9 @@ void setproctitle(const char *fmt, ...);
 #if defined(linux) || defined(__linux__)
 # include <endian.h>
 #else
-#define	LITTLE_ENDIAN	1234	/* least-significant byte first (vax, pc) */
-#define	BIG_ENDIAN	4321	/* most-significant byte first (IBM, net) */
-#define	PDP_ENDIAN	3412	/* LSB first in word, MSW first in long (pdp)*/
+#define    LITTLE_ENDIAN    1234    /* least-significant byte first (vax, pc) */
+#define    BIG_ENDIAN    4321    /* most-significant byte first (IBM, net) */
+#define    PDP_ENDIAN    3412    /* LSB first in word, MSW first in long (pdp)*/
 
 #if defined(__i386__) || defined(__x86_64__) || defined(__amd64__) || \
    defined(vax) || defined(ns32000) || defined(sun386) || \
@@ -142,7 +142,7 @@ void setproctitle(const char *fmt, ...);
 
 #if defined(sel) || defined(pyr) || defined(mc68000) || defined(sparc) || \
     defined(is68k) || defined(tahoe) || defined(ibm032) || defined(ibm370) || \
-    defined(MIPSEB) || defined(_MIPSEB) || defined(_IBMR2) || defined(DGUX) ||\
+    defined(MIPSEB) || defined(_MIPSEB) || defined(_IBMR2) || defined(DGUX) || \
     defined(apollo) || defined(__convex__) || defined(_CRAY) || \
     defined(__hppa) || defined(__hp9000) || \
     defined(__hp9000s300) || defined(__hp9000s700) || \
@@ -177,11 +177,11 @@ void setproctitle(const char *fmt, ...);
 
 #if !defined(BYTE_ORDER) || \
     (BYTE_ORDER != BIG_ENDIAN && BYTE_ORDER != LITTLE_ENDIAN)
-	/* you must determine what the correct bit order is for
-	 * your compiler - the next line is an intentional error
-	 * which will force your compiles to bomb until you fix
-	 * the above macros.
-	 */
+/* you must determine what the correct bit order is for
+ * your compiler - the next line is an intentional error
+ * which will force your compiles to bomb until you fix
+ * the above macros.
+ */
 #error "Undefined or invalid BYTE_ORDER"
 #endif
 

@@ -5,7 +5,7 @@
  * tables of power of two in size are used, collisions are handled by
  * chaining. See the source code for more information... :)
  *
- * 这个文件实现了一个内存哈希表，
+ * 这个文件实现了一个内存哈希表,
  * 它支持插入、删除、替换、查找和获取随机元素等操作。
  *
  * 哈希表会自动在表的大小的二次方之间进行调整。
@@ -62,7 +62,7 @@
  * 哈希表节点
  */
 typedef struct dictEntry {
-    
+
     // 键
     void *key;
 
@@ -73,7 +73,7 @@ typedef struct dictEntry {
         int64_t s64;
     } v;
 
-    // 指向下个哈希表节点，形成链表
+    // 指向下个哈希表节点,形成链表
     struct dictEntry *next;
 
 } dictEntry;
@@ -84,7 +84,7 @@ typedef struct dictEntry {
  */
 typedef struct dictType {
 
-    // 计算哈希值的函数
+    // 计算key的哈希值的函数
     unsigned int (*hashFunction)(const void *key);
 
     // 复制键的函数
@@ -98,7 +98,7 @@ typedef struct dictType {
 
     // 销毁键的函数
     void (*keyDestructor)(void *privdata, void *key);
-    
+
     // 销毁值的函数
     void (*valDestructor)(void *privdata, void *obj);
 
@@ -110,17 +110,17 @@ typedef struct dictType {
 /*
  * 哈希表
  *
- * 每个字典都使用两个哈希表，从而实现渐进式 rehash 。
+ * 每个字典都使用两个哈希表,从而实现渐进式 rehash 。
  */
-typedef struct dictht {
-    
+typedef struct dictht {  //hashtable
+
     // 哈希表数组
     dictEntry **table;
 
     // 哈希表大小
     unsigned long size;
-    
-    // 哈希表大小掩码，用于计算索引值
+
+    // 哈希表大小掩码,用于计算索引值
     // 总是等于 size - 1
     unsigned long sizemask;
 
@@ -141,10 +141,10 @@ typedef struct dict {
     void *privdata;
 
     // 哈希表
-    dictht ht[2];
+    dictht ht[2];  // 两个hash表, 实现 渐进式迁移
 
     // rehash 索引
-    // 当 rehash 不在进行时，值为 -1
+    // 当 rehash 不在进行时,值为 -1
     int rehashidx; /* rehashing not in progress if rehashidx == -1 */
 
     // 目前正在运行的安全迭代器的数量
@@ -159,26 +159,26 @@ typedef struct dict {
 /*
  * 字典迭代器
  *
- * 如果 safe 属性的值为 1 ，那么在迭代进行的过程中，
- * 程序仍然可以执行 dictAdd 、 dictFind 和其他函数，对字典进行修改。
+ * 如果 safe 属性的值为 1 ,那么在迭代进行的过程中,
+ * 程序仍然可以执行 dictAdd 、 dictFind 和其他函数,对字典进行修改。
  *
- * 如果 safe 不为 1 ，那么程序只会调用 dictNext 对字典进行迭代，
+ * 如果 safe 不为 1 ,那么程序只会调用 dictNext 对字典进行迭代,
  * 而不对字典进行修改。
  */
 typedef struct dictIterator {
-        
+
     // 被迭代的字典
     dict *d;
 
-    // table ：正在被迭代的哈希表号码，值可以是 0 或 1 。
+    // table ：正在被迭代的哈希表号码,值可以是 0 或 1 。
     // index ：迭代器当前所指向的哈希表索引位置。
     // safe ：标识这个迭代器是否安全
     int table, index, safe;
 
     // entry ：当前迭代到的节点的指针
     // nextEntry ：当前迭代节点的下一个节点
-    //             因为在安全迭代器运作时， entry 所指向的节点可能会被修改，
-    //             所以需要一个额外的指针来保存下一节点的位置，
+    //             因为在安全迭代器运作时, entry 所指向的节点可能会被修改,
+    //             所以需要一个额外的指针来保存下一节点的位置,
     //             从而防止指针丢失
     dictEntry *entry, *nextEntry;
 
@@ -253,33 +253,71 @@ typedef void (dictScanFunction)(void *privdata, const dictEntry *de);
 
 /* API */
 dict *dictCreate(dictType *type, void *privDataPtr);
+
+// 创建一个新的hash表
 int dictExpand(dict *d, unsigned long size);
+
+// 添加 kv, k存在会失败, 不会覆盖
 int dictAdd(dict *d, void *key, void *val);
+
 dictEntry *dictAddRaw(dict *d, void *key);
+
+// set or add
 int dictReplace(dict *d, void *key, void *val);
+
 dictEntry *dictReplaceRaw(dict *d, void *key);
+
 int dictDelete(dict *d, const void *key);
+
 int dictDeleteNoFree(dict *d, const void *key);
+
+// 释放整个字典
 void dictRelease(dict *d);
-dictEntry * dictFind(dict *d, const void *key);
+
+dictEntry *dictFind(dict *d, const void *key);
+
+// 返回val指针
 void *dictFetchValue(dict *d, const void *key);
+
+// 整理空间, 适配节点数, 不浪费空间
 int dictResize(dict *d);
+
 dictIterator *dictGetIterator(dict *d);
+
 dictIterator *dictGetSafeIterator(dict *d);
+
 dictEntry *dictNext(dictIterator *iter);
+
 void dictReleaseIterator(dictIterator *iter);
+
+// 随机返回字典中任意一个node
 dictEntry *dictGetRandomKey(dict *d);
+
 int dictGetRandomKeys(dict *d, dictEntry **des, int count);
+
 void dictPrintStats(dict *d);
+
 unsigned int dictGenHashFunction(const void *key, int len);
+
 unsigned int dictGenCaseHashFunction(const unsigned char *buf, int len);
-void dictEmpty(dict *d, void(callback)(void*));
+
+// clearAll
+void dictEmpty(dict *d, void(callback)(void *));
+
 void dictEnableResize(void);
+
 void dictDisableResize(void);
+
+// 执行 N 步渐进式 rehash
 int dictRehash(dict *d, int n);
+
 int dictRehashMilliseconds(dict *d, int ms);
+
 void dictSetHashFunctionSeed(unsigned int initval);
+
 unsigned int dictGetHashFunctionSeed(void);
+
+// hscan 迭代字典中的元素
 unsigned long dictScan(dict *d, unsigned long v, dictScanFunction *fn, void *privdata);
 
 /* Hash table types */

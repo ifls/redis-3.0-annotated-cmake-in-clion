@@ -71,16 +71,15 @@
  * Note that if the timeout is zero (usually from the point of view of
  * commands API this means no timeout) the value stored into 'timeout'
  * is zero. */
-// 根据输入参数，取出最大等待时间
+// 根据输入参数,取出最大等待时间
 int getTimeoutFromObjectOrReply(redisClient *c, robj *object, mstime_t *timeout, int unit) {
     long long tval;
 
-    if (getLongLongFromObjectOrReply(c,object,&tval,
-        "timeout is not an integer or out of range") != REDIS_OK)
+    if (getLongLongFromObjectOrReply(c, object, &tval, "timeout is not an integer or out of range") != REDIS_OK)
         return REDIS_ERR;
 
     if (tval < 0) {
-        addReplyError(c,"timeout is negative");
+        addReplyError(c, "timeout is negative");
         return REDIS_ERR;
     }
 
@@ -106,7 +105,7 @@ void blockClient(redisClient *c, int btype) {
 /* This function is called in the beforeSleep() function of the event loop
  * in order to process the pending input buffer of clients that were
  * unblocked after a blocking operation. */
-// 取消所有在 unblocked_clients 链表中的客户端的阻塞状态
+// 解除所有在 unblocked_clients 链表中的客户端的阻塞状态
 void processUnblockedClients(void) {
     listNode *ln;
     redisClient *c;
@@ -115,7 +114,7 @@ void processUnblockedClients(void) {
         ln = listFirst(server.unblocked_clients);
         redisAssert(ln != NULL);
         c = ln->value;
-        listDelNode(server.unblocked_clients,ln);
+        listDelNode(server.unblocked_clients, ln);
         c->flags &= ~REDIS_UNBLOCKED;
         c->btype = REDIS_BLOCKED_NONE;
 
@@ -145,17 +144,17 @@ void unblockClient(redisClient *c) {
     c->flags |= REDIS_UNBLOCKED;
     c->btype = REDIS_BLOCKED_NONE;
     server.bpop_blocked_clients--;
-    listAddNodeTail(server.unblocked_clients,c);
+    listAddNodeTail(server.unblocked_clients, c);
 }
 
 /* This function gets called when a blocked client timed out in order to
  * send it a reply of some kind. */
-// 等待超时，向被阻塞的客户端返回通知
+// 等待超时后,向被阻塞的客户端返回通知
 void replyToBlockedClientTimedOut(redisClient *c) {
     if (c->btype == REDIS_BLOCKED_LIST) {
-        addReply(c,shared.nullmultibulk);
+        addReply(c, shared.nullmultibulk);
     } else if (c->btype == REDIS_BLOCKED_WAIT) {
-        addReplyLongLong(c,replicationCountAcksByOffset(c->bpop.reploffset));
+        addReplyLongLong(c, replicationCountAcksByOffset(c->bpop.reploffset));
     } else {
         redisPanic("Unknown btype in replyToBlockedClientTimedOut().");
     }

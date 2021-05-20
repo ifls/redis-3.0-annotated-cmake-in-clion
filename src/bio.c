@@ -4,20 +4,20 @@
  *
  * This file implements operations that we need to perform in the background.
  *
- * bio 实现了将工作放在后台执行的功能。
+ * bio 实现了将工作放在后台执行的功能.
  *
  * Currently there is only a single operation, that is a background close(2)
  * system call. This is needed as when the process is the last owner of a
  * reference to a file closing it means unlinking it, and the deletion of the
  * file is slow, blocking the server.
  *
- * 目前在后台执行的只有 close(2) 操作：
- * 因为当服务器是某个文件的最后一个拥有者时，
- * 关闭一个文件代表 unlinking 它，
- * 并且删除文件非常慢，会阻塞系统，
- * 所以我们将 close(2) 放到后台进行。
+ * 目前在后台执行的只有 close(2) 操作:
+ * 因为当服务器是某个文件的最后一个拥有者时,
+ * 关闭一个文件代表 unlinking 它,
+ * 并且删除文件非常慢,会阻塞系统,
+ * 所以我们将 close(2) 放到后台进行.
  *
- * (译注：现在不止 close(2) ，连 AOF 文件的 fsync 也是放到后台执行的）
+ * (译注:现在不止 close(2) ,连 AOF 文件的 fsync 也是放到后台执行的）
  *
  * In the future we'll either continue implementing new things we need or
  * we'll switch to libeio. However there are probably long term uses for this
@@ -25,9 +25,9 @@
  * it is not impossible that we'll need a non blocking FLUSHDB/FLUSHALL
  * implementation).
  *
- * 这个后台服务将来可能会增加更多功能，或者切换到 libeio 上面去。
- * 不过我们可能会长期使用这个文件，以便支持一些 Redis 所特有的后台操作。
- * 比如说，将来我们可能需要一个非阻塞的 FLUSHDB 或者 FLUSHALL 也说不定。
+ * 这个后台服务将来可能会增加更多功能,或者切换到 libeio 上面去.libeio - truly asynchronous POSIX I/O https://github.com/kindy/libeio
+ * 不过我们可能会长期使用这个文件,以便支持一些 Redis 所特有的后台操作.
+ * 比如说,将来我们可能需要一个非阻塞的 FLUSHDB 或者 FLUSHALL 也说不定.
  *
  * DESIGN
  * ------
@@ -37,20 +37,20 @@
  * Every thread wait for new jobs in its queue, and process every job
  * sequentially.
  *
- * 设计很简单：
- * 用一个结构表示要执行的工作，而每个类型的工作有一个队列和线程，
- * 每个线程都顺序地执行队列中的工作。
+ * 设计很简单:
+ * 用一个结构表示要执行的工作,而每个类型的工作有一个队列和线程,
+ * 每个线程都顺序地执行队列中的工作.
  *
  * Jobs of the same type are guaranteed to be processed from the least
  * recently inserted to the most recently inserted (older jobs processed
  * first).
  *
- * 同一类型的工作按 FIFO 的顺序执行。
+ * 同一类型的工作按 FIFO 的顺序执行.
  *
  * Currently there is no way for the creator of the job to be notified about
  * the completion of the operation, this will only be added when/if needed.
  *
- * 目前还没有办法在任务完成时通知执行者，在有需要的时候，会实现这个功能。
+ * 目前还没有办法在任务完成时通知执行者,在有需要的时候,会实现这个功能.
  *
  * ----------------------------------------------------------------------------
  *
@@ -86,7 +86,7 @@
 #include "redis.h"
 #include "bio.h"
 
-// 工作线程，斥互和条件变量
+// 工作线程,斥互和条件变量
 static pthread_t bio_threads[REDIS_BIO_NUM_OPS];
 static pthread_mutex_t bio_mutex[REDIS_BIO_NUM_OPS];
 static pthread_cond_t bio_condvar[REDIS_BIO_NUM_OPS];
@@ -108,7 +108,7 @@ static unsigned long long bio_pending[REDIS_BIO_NUM_OPS];
  *
  * 表示后台任务的数据结构
  *
- * 这个结构只由 API 使用，不会被暴露给外部。
+ * 这个结构只由 API 使用,不会被暴露给外部.
  */
 struct bio_job {
 
@@ -118,7 +118,7 @@ struct bio_job {
     /* Job specific arguments pointers. If we need to pass more than three
      * arguments we can just pass a pointer to a structure or alike. 
      *
-     * 任务的参数。参数多于三个时，可以传递数组或者结构
+     * 任务的参数.参数多于三个时,可以传递数组或者结构
      */
     void *arg1, *arg2, *arg3;
 };
@@ -134,7 +134,7 @@ void *bioProcessBackgroundJobs(void *arg);
 
 /* Initialize the background system, spawning the thread. 
  *
- * 初始化后台任务系统，生成线程
+ * 初始化后台任务系统,生成线程
  */
 void bioInit(void) {
     pthread_attr_t attr;
@@ -144,11 +144,11 @@ void bioInit(void) {
 
     /* Initialization of state vars and objects 
      *
-     * 初始化 job 队列，以及线程状态
+     * 初始化 job 队列,以及线程状态
      */
     for (j = 0; j < REDIS_BIO_NUM_OPS; j++) {
-        pthread_mutex_init(&bio_mutex[j],NULL);
-        pthread_cond_init(&bio_condvar[j],NULL);
+        pthread_mutex_init(&bio_mutex[j], NULL);
+        pthread_cond_init(&bio_condvar[j], NULL);
         bio_jobs[j] = listCreate();
         bio_pending[j] = 0;
     }
@@ -158,7 +158,7 @@ void bioInit(void) {
      * 设置栈大小
      */
     pthread_attr_init(&attr);
-    pthread_attr_getstacksize(&attr,&stacksize);
+    pthread_attr_getstacksize(&attr, &stacksize);
     if (!stacksize) stacksize = 1; /* The world is full of Solaris Fixes */
     while (stacksize < REDIS_THREAD_STACK_SIZE) stacksize *= 2;
     pthread_attr_setstacksize(&attr, stacksize);
@@ -170,9 +170,9 @@ void bioInit(void) {
      * 创建线程
      */
     for (j = 0; j < REDIS_BIO_NUM_OPS; j++) {
-        void *arg = (void*)(unsigned long) j;
-        if (pthread_create(&thread,&attr,bioProcessBackgroundJobs,arg) != 0) {
-            redisLog(REDIS_WARNING,"Fatal: Can't initialize Background Jobs.");
+        void *arg = (void *) (unsigned long) j;
+        if (pthread_create(&thread, &attr, bioProcessBackgroundJobs, arg) != 0) {
+            redisLog(REDIS_WARNING, "Fatal: Can't initialize Background Jobs.");
             exit(1);
         }
         bio_threads[j] = thread;
@@ -193,7 +193,7 @@ void bioCreateBackgroundJob(int type, void *arg1, void *arg2, void *arg3) {
     pthread_mutex_lock(&bio_mutex[type]);
 
     // 将新工作推入队列
-    listAddNodeTail(bio_jobs[type],job);
+    listAddNodeTail(bio_jobs[type], job);
     bio_pending[type]++;
 
     pthread_cond_signal(&bio_condvar[type]);
@@ -220,15 +220,14 @@ void *bioProcessBackgroundJobs(void *arg) {
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGALRM);
     if (pthread_sigmask(SIG_BLOCK, &sigset, NULL))
-        redisLog(REDIS_WARNING,
-            "Warning: can't mask SIGALRM in bio.c thread: %s", strerror(errno));
+        redisLog(REDIS_WARNING, "Warning: can't mask SIGALRM in bio.c thread: %s", strerror(errno));
 
-    while(1) {
+    while (1) {
         listNode *ln;
 
         /* The loop always starts with the lock hold. */
         if (listLength(bio_jobs[type]) == 0) {
-            pthread_cond_wait(&bio_condvar[type],&bio_mutex[type]);
+            pthread_cond_wait(&bio_condvar[type], &bio_mutex[type]);
             continue;
         }
 
@@ -246,10 +245,10 @@ void *bioProcessBackgroundJobs(void *arg) {
         /* Process the job accordingly to its type. */
         // 执行任务
         if (type == REDIS_BIO_CLOSE_FILE) {
-            close((long)job->arg1);
+            close((long) job->arg1);
 
         } else if (type == REDIS_BIO_AOF_FSYNC) {
-            aof_fsync((long)job->arg1);
+            aof_fsync((long) job->arg1);
 
         } else {
             redisPanic("Wrong job type in bioProcessBackgroundJobs().");
@@ -260,8 +259,8 @@ void *bioProcessBackgroundJobs(void *arg) {
         /* Lock again before reiterating the loop, if there are no longer
          * jobs to process we'll block again in pthread_cond_wait(). */
         pthread_mutex_lock(&bio_mutex[type]);
-        // 将执行完成的任务从队列中删除，并减少任务计数器
-        listDelNode(bio_jobs[type],ln);
+        // 将执行完成的任务从队列中删除,并减少任务计数器
+        listDelNode(bio_jobs[type], ln);
         bio_pending[type]--;
     }
 }
@@ -283,7 +282,7 @@ unsigned long long bioPendingJobsOfType(int type) {
 /* Kill the running bio threads in an unclean way. This function should be
  * used only when it's critical to stop the threads for some reason.
  *
- * 不进行清理，直接杀死进程，只在出现严重错误时使用
+ * 不进行清理,直接杀死进程,只在出现严重错误时使用
  *
  * Currently Redis does this only on crash (for instance on SIGSEGV) in order
  * to perform a fast memory check without other threads messing with memory. 
@@ -293,13 +292,10 @@ void bioKillThreads(void) {
 
     for (j = 0; j < REDIS_BIO_NUM_OPS; j++) {
         if (pthread_cancel(bio_threads[j]) == 0) {
-            if ((err = pthread_join(bio_threads[j],NULL)) != 0) {
-                redisLog(REDIS_WARNING,
-                    "Bio thread for job type #%d can be joined: %s",
-                        j, strerror(err));
+            if ((err = pthread_join(bio_threads[j], NULL)) != 0) {
+                redisLog(REDIS_WARNING, "Bio thread for job type #%d can be joined: %s", j, strerror(err));
             } else {
-                redisLog(REDIS_WARNING,
-                    "Bio thread for job type #%d terminated",j);
+                redisLog(REDIS_WARNING, "Bio thread for job type #%d terminated", j);
             }
         }
     }

@@ -46,6 +46,7 @@
 
 /* Toggle the 16 bit unsigned integer pointed by *p from little endian to
  * big endian */
+// 小端序转大端序
 void memrev16(void *p) {
     unsigned char *x = p, t;
 

@@ -28,7 +28,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 #ifndef __ENDIANCONV_H
 #define __ENDIANCONV_H
@@ -36,11 +36,18 @@
 #include "config.h"
 #include <stdint.h>
 
+// 大端序, 小端序转换
+
 void memrev16(void *p);
+
 void memrev32(void *p);
+
 void memrev64(void *p);
+
 uint16_t intrev16(uint16_t v);
+
 uint32_t intrev32(uint32_t v);
+
 uint64_t intrev64(uint64_t v);
 
 /* variants of the function doing the actual convertion only if the target

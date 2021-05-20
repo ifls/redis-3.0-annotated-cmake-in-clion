@@ -62,13 +62,13 @@ void memtest_progress_start(char *title, int pass) {
 
     printf("\x1b[H\x1b[2J");    /* Cursor home, clear screen. */
     /* Fill with dots. */
-    for (j = 0; j < ws.ws_col*(ws.ws_row-2); j++) printf(".");
+    for (j = 0; j < ws.ws_col * (ws.ws_row - 2); j++) printf(".");
     printf("Please keep the test running several minutes per GB of memory.\n");
     printf("Also check http://www.memtest86.com/ and http://pyropus.ca/software/memtester/");
     printf("\x1b[H\x1b[2K");          /* Cursor home, clear current line.  */
     printf("%s [%d]\n", title, pass); /* Print title. */
     progress_printed = 0;
-    progress_full = ws.ws_col*(ws.ws_row-3);
+    progress_full = ws.ws_col * (ws.ws_row - 3);
     fflush(stdout);
 }
 
@@ -77,9 +77,9 @@ void memtest_progress_end(void) {
 }
 
 void memtest_progress_step(size_t curr, size_t size, char c) {
-    size_t chars = ((unsigned long long)curr*progress_full)/size, j;
+    size_t chars = ((unsigned long long) curr * progress_full) / size, j;
 
-    for (j = 0; j < chars-progress_printed; j++) printf("%c",c);
+    for (j = 0; j < chars - progress_printed; j++) printf("%c", c);
     progress_printed = chars;
     fflush(stdout);
 }
@@ -88,26 +88,25 @@ void memtest_progress_step(size_t curr, size_t size, char c) {
  * address, and finally verified. This test is very fast but may detect
  * ASAP big issues with the memory subsystem. */
 void memtest_addressing(unsigned long *l, size_t bytes) {
-    unsigned long words = bytes/sizeof(unsigned long);
+    unsigned long words = bytes / sizeof(unsigned long);
     unsigned long j, *p;
 
     /* Fill */
     p = l;
     for (j = 0; j < words; j++) {
-        *p = (unsigned long)p;
+        *p = (unsigned long) p;
         p++;
-        if ((j & 0xffff) == 0) memtest_progress_step(j,words*2,'A');
+        if ((j & 0xffff) == 0) memtest_progress_step(j, words * 2, 'A');
     }
     /* Test */
     p = l;
     for (j = 0; j < words; j++) {
-        if (*p != (unsigned long)p) {
-            printf("\n*** MEMORY ADDRESSING ERROR: %p contains %lu\n",
-                (void*) p, *p);
+        if (*p != (unsigned long) p) {
+            printf("\n*** MEMORY ADDRESSING ERROR: %p contains %lu\n", (void *) p, *p);
             exit(1);
         }
         p++;
-        if ((j & 0xffff) == 0) memtest_progress_step(j+words,words*2,'A');
+        if ((j & 0xffff) == 0) memtest_progress_step(j + words, words * 2, 'A');
     }
 }
 
@@ -116,19 +115,18 @@ void memtest_addressing(unsigned long *l, size_t bytes) {
  * effectiveness of caches, and making it hard for the OS to transfer
  * pages on the swap. */
 void memtest_fill_random(unsigned long *l, size_t bytes) {
-    unsigned long step = 4096/sizeof(unsigned long);
-    unsigned long words = bytes/sizeof(unsigned long)/2;
-    unsigned long iwords = words/step;  /* words per iteration */
+    unsigned long step = 4096 / sizeof(unsigned long);
+    unsigned long words = bytes / sizeof(unsigned long) / 2;
+    unsigned long iwords = words / step;  /* words per iteration */
     unsigned long off, w, *l1, *l2;
 
     assert((bytes & 4095) == 0);
     for (off = 0; off < step; off++) {
-        l1 = l+off;
-        l2 = l1+words;
+        l1 = l + off;
+        l2 = l1 + words;
         for (w = 0; w < iwords; w++) {
 #ifdef MEMTEST_32BIT
-            *l1 = *l2 = ((unsigned long)     (rand()&0xffff)) |
-                        (((unsigned long)    (rand()&0xffff)) << 16);
+            *l1 = *l2 = ((unsigned long) (rand() & 0xffff)) | (((unsigned long) (rand() & 0xffff)) << 16);
 #else
             *l1 = *l2 = ((unsigned long)     (rand()&0xffff)) |
                         (((unsigned long)    (rand()&0xffff)) << 16) |
@@ -138,30 +136,27 @@ void memtest_fill_random(unsigned long *l, size_t bytes) {
             l1 += step;
             l2 += step;
             if ((w & 0xffff) == 0)
-                memtest_progress_step(w+iwords*off,words,'R');
+                memtest_progress_step(w + iwords * off, words, 'R');
         }
     }
 }
 
 /* Like memtest_fill_random() but uses the two specified values to fill
  * memory, in an alternated way (v1|v2|v1|v2|...) */
-void memtest_fill_value(unsigned long *l, size_t bytes, unsigned long v1,
-                        unsigned long v2, char sym)
-{
-    unsigned long step = 4096/sizeof(unsigned long);
-    unsigned long words = bytes/sizeof(unsigned long)/2;
-    unsigned long iwords = words/step;  /* words per iteration */
+void memtest_fill_value(unsigned long *l, size_t bytes, unsigned long v1, unsigned long v2, char sym) {
+    unsigned long step = 4096 / sizeof(unsigned long);
+    unsigned long words = bytes / sizeof(unsigned long) / 2;
+    unsigned long iwords = words / step;  /* words per iteration */
     unsigned long off, w, *l1, *l2, v;
 
     assert((bytes & 4095) == 0);
     for (off = 0; off < step; off++) {
-        l1 = l+off;
-        l2 = l1+words;
+        l1 = l + off;
+        l2 = l1 + words;
         v = (off & 1) ? v2 : v1;
         for (w = 0; w < iwords; w++) {
 #ifdef MEMTEST_32BIT
-            *l1 = *l2 = ((unsigned long)     v) |
-                        (((unsigned long)    v) << 16);
+            *l1 = *l2 = ((unsigned long) v) | (((unsigned long) v) << 16);
 #else
             *l1 = *l2 = ((unsigned long)     v) |
                         (((unsigned long)    v) << 16) |
@@ -171,27 +166,26 @@ void memtest_fill_value(unsigned long *l, size_t bytes, unsigned long v1,
             l1 += step;
             l2 += step;
             if ((w & 0xffff) == 0)
-                memtest_progress_step(w+iwords*off,words,sym);
+                memtest_progress_step(w + iwords * off, words, sym);
         }
     }
 }
 
 void memtest_compare(unsigned long *l, size_t bytes) {
-    unsigned long words = bytes/sizeof(unsigned long)/2;
+    unsigned long words = bytes / sizeof(unsigned long) / 2;
     unsigned long w, *l1, *l2;
 
     assert((bytes & 4095) == 0);
     l1 = l;
-    l2 = l1+words;
+    l2 = l1 + words;
     for (w = 0; w < words; w++) {
         if (*l1 != *l2) {
-            printf("\n*** MEMORY ERROR DETECTED: %p != %p (%lu vs %lu)\n",
-                (void*)l1, (void*)l2, *l1, *l2);
+            printf("\n*** MEMORY ERROR DETECTED: %p != %p (%lu vs %lu)\n", (void *) l1, (void *) l2, *l1, *l2);
             exit(1);
         }
-        l1 ++;
-        l2 ++;
-        if ((w & 0xffff) == 0) memtest_progress_step(w,words,'=');
+        l1++;
+        l2++;
+        if ((w & 0xffff) == 0) memtest_progress_step(w, words, '=');
     }
 }
 
@@ -199,43 +193,42 @@ void memtest_compare_times(unsigned long *m, size_t bytes, int pass, int times) 
     int j;
 
     for (j = 0; j < times; j++) {
-        memtest_progress_start("Compare",pass);
-        memtest_compare(m,bytes);
+        memtest_progress_start("Compare", pass);
+        memtest_compare(m, bytes);
         memtest_progress_end();
     }
 }
 
 void memtest_test(size_t megabytes, int passes) {
-    size_t bytes = megabytes*1024*1024;
+    size_t bytes = megabytes * 1024 * 1024;
     unsigned long *m = malloc(bytes);
     int pass = 0;
 
     if (m == NULL) {
-        fprintf(stderr,"Unable to allocate %zu megabytes: %s",
-            megabytes, strerror(errno));
+        fprintf(stderr, "Unable to allocate %zu megabytes: %s", megabytes, strerror(errno));
         exit(1);
     }
     while (pass != passes) {
         pass++;
 
-        memtest_progress_start("Addressing test",pass);
-        memtest_addressing(m,bytes);
+        memtest_progress_start("Addressing test", pass);
+        memtest_addressing(m, bytes);
         memtest_progress_end();
 
-        memtest_progress_start("Random fill",pass);
-        memtest_fill_random(m,bytes);
+        memtest_progress_start("Random fill", pass);
+        memtest_fill_random(m, bytes);
         memtest_progress_end();
-        memtest_compare_times(m,bytes,pass,4);
+        memtest_compare_times(m, bytes, pass, 4);
 
-        memtest_progress_start("Solid fill",pass);
-        memtest_fill_value(m,bytes,0,(unsigned long)-1,'S');
+        memtest_progress_start("Solid fill", pass);
+        memtest_fill_value(m, bytes, 0, (unsigned long) -1, 'S');
         memtest_progress_end();
-        memtest_compare_times(m,bytes,pass,4);
+        memtest_compare_times(m, bytes, pass, 4);
 
-        memtest_progress_start("Checkerboard fill",pass);
-        memtest_fill_value(m,bytes,ULONG_ONEZERO,ULONG_ZEROONE,'C');
+        memtest_progress_start("Checkerboard fill", pass);
+        memtest_fill_value(m, bytes, ULONG_ONEZERO, ULONG_ZEROONE, 'C');
         memtest_progress_end();
-        memtest_compare_times(m,bytes,pass,4);
+        memtest_compare_times(m, bytes, pass, 4);
     }
 }
 
@@ -259,9 +252,9 @@ void memtest_non_destructive_swap(void *addr, size_t size) {
         unsigned long a, b;
 
         a = p[j];
-        b = p[j+1];
+        b = p[j + 1];
         p[j] = b;
-        p[j+1] = a;
+        p[j + 1] = a;
     }
 }
 
@@ -270,7 +263,7 @@ void memtest(size_t megabytes, int passes) {
         ws.ws_col = 80;
         ws.ws_row = 20;
     }
-    memtest_test(megabytes,passes);
+    memtest_test(megabytes, passes);
     printf("\nYour memory passed this test.\n");
     printf("Please if you are still in doubt use the following two tools:\n");
     printf("1) memtest86: http://www.memtest86.com/\n");
