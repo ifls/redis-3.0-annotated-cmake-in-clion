@@ -236,7 +236,7 @@ void stopAppendOnly(void) {
     // 参数 1 表示强制模式
     flushAppendOnlyFile(1);
 
-    // 冲洗 AOF 文件
+    // 立刻写入到磁盘 AOF 文件
     aof_fsync(server.aof_fd);
 
     // 关闭 AOF 文件
@@ -353,6 +353,7 @@ int startAppendOnly(void) {
  */
 #define AOF_WRITE_LOG_ERROR_RATE 30 /* Seconds between errors logging. */
 
+// force == 1 表示强制
 void flushAppendOnlyFile(int force) {
     ssize_t nwritten;
     int sync_in_progress = 0;
@@ -544,7 +545,7 @@ void flushAppendOnlyFile(int force) {
 
     /* Perform the fsync if needed. */
 
-    // 总是执行 fsnyc
+    // 总是执行 fsnyc 立刻同步数据
     if (server.aof_fsync == AOF_FSYNC_ALWAYS) {
         /* aof_fsync is defined as fdatasync() for Linux in order to avoid
          * flushing metadata. */
@@ -558,7 +559,7 @@ void flushAppendOnlyFile(int force) {
         // 放到后台执行
         if (!sync_in_progress) aof_background_fsync(server.aof_fd);
         // 更新最后一次执行 fsync 的时间
-        server.aof_last_fsync = server.unixtime;
+        server.aof_last_fsync = server.unixtime;  // 精确到秒级
     }
 
     // 其实上面无论执行 if 部分还是 else 部分都要更新 fsync 的时间

@@ -620,7 +620,7 @@ void aeMain(aeEventLoop *eventLoop) {
 
         // 如果有需要在事件处理前执行的函数,那么运行它
         if (eventLoop->beforesleep != NULL)
-            eventLoop->beforesleep(eventLoop);
+            eventLoop->beforesleep(eventLoop);  // 会 执行 aof 写入日志,  不算是wal, 而是写后日志, 是有一定丢失数据的风险的
 
         // 开始处理事件
         aeProcessEvents(eventLoop, AE_ALL_EVENTS);  // 2

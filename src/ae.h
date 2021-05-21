@@ -189,7 +189,7 @@ typedef struct aeEventLoop {
     void *apidata; /* This is used for polling API specific data */
 
     // 在处理事件前要执行的函数
-    aeBeforeSleepProc *beforesleep;
+    aeBeforeSleepProc *beforesleep;  //
 
 } aeEventLoop;
 

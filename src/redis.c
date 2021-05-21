@@ -1509,7 +1509,8 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     if (zmalloc_used_memory() > server.stat_peak_memory)
         server.stat_peak_memory = zmalloc_used_memory();
 
-    /* Sample the RSS here since this is a relatively slow call. */
+    /* Sample the RSS here since this is a relatively slow call. RSS =常驻内存集, 实际使用物理内存（Resident Set Size）包含共享库的内存 */
+    // VSS 是虚拟内存大小  参考 https://blog.csdn.net/whbing1471/article/details/105523704
     server.resident_set_size = zmalloc_get_rss();
 
     /* We received a SIGTERM, shutting down here in a safe way, as it is
@@ -1644,7 +1645,7 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
         }
     }
 
-    // 根据 AOF 政策,
+    // 根据 AOF 策略,
     // 考虑是否需要将 AOF 缓冲区中的内容写入到 AOF 文件中
     /* AOF postponed flush: Try at every cron cycle if the slow fsync
      * completed. */
@@ -1654,7 +1655,7 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
      * clear the AOF error in case of success to make the DB writable again,
      * however to try every second is enough in case of 'hz' is set to
      * an higher frequency. */
-    run_with_period(1000) {
+    run_with_period(1000) {  // 每秒执行一次
         if (server.aof_last_write_status == REDIS_ERR)
             flushAppendOnlyFile(0);
     }
@@ -2667,7 +2668,7 @@ int processCommand(redisClient *c) {
      * go through checking for replication and QUIT will cause trouble
      * when FORCE_REPLICATION is enabled and would be implemented in
      * a regular command proc. */
-    // 特别处理 quit 命令
+    // 特别处理 quit 命令, 忽略大小写比较 strcasecmp
     if (!strcasecmp(c->argv[0]->ptr, "quit")) {
         addReply(c, shared.ok);
         c->flags |= REDIS_CLOSE_AFTER_REPLY;
@@ -4079,7 +4080,7 @@ int main(int argc, char **argv) {
     }
 
     // 运行事件处理器，一直到服务器关闭为止
-    aeSetBeforeSleepProc(server.el,beforeSleep);
+    aeSetBeforeSleepProc(server.el,beforeSleep);  // 会 执行 aof 写入日志
     // 事件主循环
     aeMain(server.el);  // 1
 
