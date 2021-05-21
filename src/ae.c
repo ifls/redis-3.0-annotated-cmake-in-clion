@@ -295,10 +295,10 @@ long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds, aeTi
     // 设定处理事件的时间
     aeAddMillisecondsToNow(milliseconds, &te->when_sec, &te->when_ms);
     // 设置事件处理器
-    te->timeProc = proc;
+    te->timeProc = proc;  // serverCron 执行定时调度任务
     te->finalizerProc = finalizerProc;
     // 设置私有数据
-    te->clientData = clientData;
+    te->clientData = clientData;  // 只有一个地方调用, 赋的值 是NULL
 
     // 将新事件放入表头
     te->next = eventLoop->timeEventHead;
@@ -564,7 +564,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
             if (fe->mask & mask & AE_READABLE) {
                 // rfired 确保读/写事件只能执行其中一个
                 rfired = 1;
-                fe->rfileProc(eventLoop,fd,fe->clientData,mask);  //readQueryFromClient()
+                fe->rfileProc(eventLoop,fd,fe->clientData,mask);  //3 readQueryFromClient()
             }
             // 写事件
             if (fe->mask & mask & AE_WRITABLE) {
@@ -623,7 +623,7 @@ void aeMain(aeEventLoop *eventLoop) {
             eventLoop->beforesleep(eventLoop);
 
         // 开始处理事件
-        aeProcessEvents(eventLoop, AE_ALL_EVENTS);
+        aeProcessEvents(eventLoop, AE_ALL_EVENTS);  // 2
     }
 }
 

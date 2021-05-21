@@ -216,7 +216,7 @@ int getGenericCommand(redisClient *c) {
 }
 
 // -->GET key
-void getCommand(redisClient *c) {
+void getCommand(redisClient *c) {  // 8. 具体的命令
     getGenericCommand(c);
 }
 

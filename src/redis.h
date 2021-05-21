@@ -931,7 +931,7 @@ struct redisServer {
     off_t loading_process_events_interval_bytes;
 
     /* Fast pointers to often looked up command */
-    // 常用命令的快捷连接
+    // 常用命令的快捷指针
     struct redisCommand *delCommand, *multiCommand, *lpushCommand, *lpopCommand, *rpopCommand;
 
 

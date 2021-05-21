@@ -79,19 +79,20 @@ struct aeEventLoop;
 /* Types and data structures 
  *
  * 事件接口
- * 设置事件触发时的处理函数
+ * 设置事件触发时的处理函数原型
  */
 typedef void aeFileProc(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask);
 
 typedef int aeTimeProc(struct aeEventLoop *eventLoop, long long id, void *clientData);
 
+// 时间事件 析构函数
 typedef void aeEventFinalizerProc(struct aeEventLoop *eventLoop, void *clientData);
 
 typedef void aeBeforeSleepProc(struct aeEventLoop *eventLoop);
 
 /* File event structure
  *
- * 文件事件结构
+ * 文件/网络io socket 事件结构
  */
 typedef struct aeFileEvent {
 
@@ -107,7 +108,7 @@ typedef struct aeFileEvent {
     aeFileProc *wfileProc;
 
     // 多路复用库的私有数据
-    void *clientData;
+    void *clientData;  // 就是 redisClient* client
 
 } aeFileEvent;
 
@@ -120,7 +121,7 @@ typedef struct aeTimeEvent {
     // 时间事件的唯一标识符
     long long id; /* time event identifier. */
 
-    // 事件的到达时间
+    // 事件的到达时间, 两个时间是要加起来的
     long when_sec; /* seconds */
     long when_ms; /* milliseconds */
 

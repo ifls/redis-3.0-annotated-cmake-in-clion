@@ -1979,7 +1979,7 @@ void initServerConfig() {
     // 在这里初始化是因为接下来读取 .conf 文件时可能会用到这些命令
     server.commands = dictCreate(&commandTableDictType, NULL);
     server.orig_commands = dictCreate(&commandTableDictType, NULL);
-    populateCommandTable();
+    populateCommandTable();  // 根据 redisCommandTable 计算 命令 hashtable
     server.delCommand = lookupCommandByCString("del");
     server.multiCommand = lookupCommandByCString("multi");
     server.lpushCommand = lookupCommandByCString("lpush");
@@ -2568,7 +2568,7 @@ void call(redisClient *c, int flags) {
     // 计算命令开始执行的时间
     start = ustime();
     // 执行具体命令实现函数
-    c->cmd->proc(c);
+    c->cmd->proc(c);  // 7.
     // 计算命令执行耗费的时间
     duration = ustime() - start;
     // 计算命令执行之后的 dirty 值
@@ -2860,7 +2860,7 @@ int processCommand(redisClient *c) {
         addReply(c, shared.queued);
     } else {
         // 执行命令
-        call(c, REDIS_CALL_FULL);
+        call(c, REDIS_CALL_FULL);  //6. 调用
 
         c->woff = server.master_repl_offset;
         // 处理那些解除了阻塞的键
@@ -4081,7 +4081,7 @@ int main(int argc, char **argv) {
     // 运行事件处理器，一直到服务器关闭为止
     aeSetBeforeSleepProc(server.el,beforeSleep);
     // 事件主循环
-    aeMain(server.el);
+    aeMain(server.el);  // 1
 
     // 服务器关闭,停止事件循环
     aeDeleteEventLoop(server.el);

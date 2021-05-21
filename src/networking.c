@@ -1194,7 +1194,7 @@ int processInlineBuffer(redisClient *c) {
     size_t querylen;
 
     /* Search for end of line */
-    newline = strchr(c->querybuf, '\n');
+    newline = strchr(c->querybuf, '\n'); // char find in string, 找到 '\n' 第一次在字符串中出现的位置
 
     /* Nothing to do without a \r\n */
     // 收到的查询内容不符合协议格式,出错
@@ -1235,12 +1235,12 @@ int processInlineBuffer(redisClient *c) {
 
     /* Leave data after the first line of the query in the buffer */
 
-    // 从缓冲区中删除已 argv 已读取的内容
+    // 从缓冲区中删除已 argv 已读取的内容  2是 "\r\n" 的地址
     // 剩余的内容是未读取的
     sdsrange(c->querybuf, querylen + 2, -1);
 
     /* Setup argv array on client structure */
-    // 为客户端的参数分配空间
+    // 释放之前的, 为客户端的参数分配新空间
     if (c->argv) zfree(c->argv);
     c->argv = zmalloc(sizeof(robj *) * argc);
 
@@ -1251,7 +1251,7 @@ int processInlineBuffer(redisClient *c) {
             // argv[j] 已经是 SDS 了
             // 所以创建的字符串对象直接指向该 SDS
             c->argv[c->argc] = createObject(REDIS_STRING, argv[j]);
-            c->argc++;
+            c->argc++; // 保存数量和命令行参数
         } else {
             sdsfree(argv[j]);
         }
@@ -1283,6 +1283,7 @@ static void setProtocolError(redisClient *c, int pos) {
  * argv[0] = SET
  * argv[1] = MSG
  * argv[2] = HELLO
+ * 对于 get key1 argc是2 argv[0]=get argv[1]=key1
  */
 int processMultibulkBuffer(redisClient *c) {
     char *newline = NULL;
@@ -1469,7 +1470,7 @@ void processInputBuffer(redisClient *c) {
     // 如果读取出现 short read ,那么可能会有内容滞留在读取缓冲区里面
     // 这些滞留内容也许不能完整构成一个符合协议的命令,
     // 需要等待下次读事件的就绪
-    while (sdslen(c->querybuf)) {
+    while (sdslen(c->querybuf)) { // 直到长度为0
         /* Return if clients are paused. */
         // 如果客户端正处于暂停状态,那么直接返回
         if (!(c->flags & REDIS_SLAVE) && clientsArePaused()) return;
@@ -1488,7 +1489,7 @@ void processInputBuffer(redisClient *c) {
         // 判断请求的类型
         // 两种类型的区别可以在 Redis 的通讯协议上查到:
         // http://redis.readthedocs.org/en/latest/topic/protocol.html
-        // 简单来说,多条查询是一般客户端发送来的, 不是命令行
+        // 简单来说, 多条查询是一般客户端发送来的, 不是命令行, 但是medis 发来的就是 *
         // 而内联查询则是 TELNET 发送来的
         if (!c->reqtype) {
             if (c->querybuf[0] == '*') {
@@ -1511,11 +1512,11 @@ void processInputBuffer(redisClient *c) {
 
         /* Multibulk processing could see a <= 0 length. */
         if (c->argc == 0) {
-            resetClient(c);
+            resetClient(c);  // 重置客户端状态, 准备执行下一条命令
         } else {
             /* Only reset the client when the command was executed. */
             // 执行命令,并重置客户端
-            if (processCommand(c) == REDIS_OK)
+            if (processCommand(c) == REDIS_OK)  //5 处理命令
                 resetClient(c);
         }
     }
@@ -1528,10 +1529,10 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
     redisClient *c = (redisClient *) privdata;  //私有数据就是client
     int nread, readlen;
     size_t qblen;
-    REDIS_NOTUSED(el);
+    REDIS_NOTUSED(el);  // 这个宏 只是用来编码编译器警告
     REDIS_NOTUSED(mask);
 
-    // 设置服务器的当前客户端
+    // 设置服务器的当前所处理的命令的客户端
     server.current_client = c;
 
     // 读入长度（默认为 16 MB）
@@ -1557,7 +1558,7 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
     if (c->querybuf_peak < qblen) c->querybuf_peak = qblen;
     // 为查询缓冲区分配空间
     c->querybuf = sdsMakeRoomFor(c->querybuf, readlen);
-    // 读入内容到查询缓存
+    // 从socket读入内容到查询缓存
     nread = read(fd, c->querybuf + qblen, readlen);
 
     // 读入出错
@@ -1584,7 +1585,7 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
         c->lastinteraction = server.unixtime;
         // 如果客户端是 master 的话,更新它的复制偏移量
         if (c->flags & REDIS_MASTER) c->reploff += nread;
-    } else {
+    } else {  // 读不到数据, 直接返回, 去读下一个fd
         // 在 nread == -1 且 errno == EAGAIN 时运行
         server.current_client = NULL;
         return;
@@ -1600,13 +1601,13 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
                  bytes);
         sdsfree(ci);
         sdsfree(bytes);
-        freeClient(c);
+        freeClient(c); // 清理客户端, 并关闭连接
         return;
     }
 
     // 从查询缓存重读取内容,创建参数,并执行命令
     // 函数会执行到缓存中的所有内容都被处理完为止
-    processInputBuffer(c);  //处理输入
+    processInputBuffer(c);  //4 处理命令 输入
 
     server.current_client = NULL;
 }
