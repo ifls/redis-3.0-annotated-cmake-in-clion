@@ -946,6 +946,7 @@ int rdbSave(char *filename) {
         return REDIS_ERR;
     }
 
+
     // 初始化 I/O
     rioInitWithFile(&rdb, fp);
 
@@ -1836,7 +1837,7 @@ void backgroundSaveDoneHandler(int exitcode, int bysignal) {
 }
 
 // -->SAVE
-void saveCommand(redisClient *c) {
+void saveCommand(redisClient *c) {  // 生成rdb文件的入口函数
 
     // BGSAVE 已经在执行中,不能再执行 SAVE
     // 否则将产生竞争条件

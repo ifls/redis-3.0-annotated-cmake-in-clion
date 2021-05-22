@@ -714,6 +714,7 @@ void configSetCommand(redisClient *c) {
         if (enable == 0 && server.aof_state != REDIS_AOF_OFF) {
             stopAppendOnly();
         } else if (enable && server.aof_state == REDIS_AOF_OFF) {
+            // 设置配置 appendonly yes时， 如果aof关闭了，这里要再次打开
             if (startAppendOnly() == REDIS_ERR) {
                 addReplyError(c, "Unable to turn on AOF. Check server logs.");
                 return;

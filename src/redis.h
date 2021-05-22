@@ -168,7 +168,7 @@
 #define REDIS_CMD_ASKING 4096               /* "k" flag */
 
 /* Object types */
-// 对象类型
+// 对象类型,  只有5种
 #define REDIS_STRING 0
 #define REDIS_LIST 1
 #define REDIS_SET 2
@@ -178,16 +178,16 @@
 /* Objects encoding.
  * Some kind of objects like Strings and Hashes can be internally represented in multiple ways.
  * The 'encoding' field of the object is set to one of this fields for this object. */
-// 对象编码
+// 对象编码， 总共9种
 #define REDIS_ENCODING_RAW 0     /* Raw representation */
-#define REDIS_ENCODING_INT 1     /* Encoded as integer */
+#define REDIS_ENCODING_INT 1     /* Encoded as integer  整数 */
 #define REDIS_ENCODING_HT 2      /* Encoded as hash table */
 #define REDIS_ENCODING_ZIPMAP 3  /* Encoded as zipmap */
 #define REDIS_ENCODING_LINKEDLIST 4 /* Encoded as regular linked list */
 #define REDIS_ENCODING_ZIPLIST 5 /* Encoded as ziplist */
 #define REDIS_ENCODING_INTSET 6  /* Encoded as intset */
-#define REDIS_ENCODING_SKIPLIST 7  /* Encoded as skiplist */
-#define REDIS_ENCODING_EMBSTR 8  /* Embedded sds string encoding */
+#define REDIS_ENCODING_SKIPLIST 7  /* Encoded as skiplist 跳表*/
+#define REDIS_ENCODING_EMBSTR 8  /* Embedded sds string encoding 嵌入式简单动态字符串 */
 
 /* Defines related to the dump file format. To store 32 bits lengths for short
  * keys requires a lot of space, so we check the most significant 2 bits of
@@ -1051,7 +1051,7 @@ struct redisServer {
     // AOF 缓冲区
     sds aof_buf;      /* AOF buffer, written before entering the event loop */
 
-    // AOF 文件的描述符
+    // AOF 文件的描述符, initServer()里第一次打开
     int aof_fd;       /* File descriptor of currently selected AOF file */
 
     // AOF 的当前目标数据库

@@ -354,6 +354,7 @@ int startAppendOnly(void) {
 #define AOF_WRITE_LOG_ERROR_RATE 30 /* Seconds between errors logging. */
 
 // force == 1 表示强制
+// 写入 aof文件的入口函数
 void flushAppendOnlyFile(int force) {
     ssize_t nwritten;
     int sync_in_progress = 0;
@@ -438,6 +439,7 @@ void flushAppendOnlyFile(int force) {
      * 当然,如果出现像电源中断这样的不可抗现象,那么 AOF 文件也是可能会出现问题的
      * 这时就要用 redis-check-aof 程序来进行修复.
      */
+    // 将 aof缓存 写入 aof文件
     nwritten = write(server.aof_fd, server.aof_buf, sdslen(server.aof_buf));
     if (nwritten != (signed) sdslen(server.aof_buf)) {
 
