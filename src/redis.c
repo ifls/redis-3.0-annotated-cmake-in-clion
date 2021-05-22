@@ -2556,7 +2556,7 @@ void call(redisClient *c, int flags) {
 
     /* Sent the command to clients in MONITOR mode, only if the commands are
      * not generated from reading an AOF. */
-    // 如果可以的话,将命令发送到 MONITOR
+    // 如果可以的话,将命令发送到 MONITOR，在命令开始执行前
     if (listLength(server.monitors) && !server.loading && !(c->cmd->flags & REDIS_CMD_SKIP_MONITOR)) {
         replicationFeedMonitors(c, server.monitors, c->db->id, c->argv, c->argc);
     }
@@ -2597,7 +2597,8 @@ void call(redisClient *c, int flags) {
      * per-command statistics that we show in INFO commandstats. */
     // 如果有需要,将命令放到 SLOWLOG 里面
     if (flags & REDIS_CALL_SLOWLOG && c->cmd->proc != execCommand)
-        slowlogPushEntryIfNeeded(c->argv, c->argc, duration);
+        slowlogPushEntryIfNeeded(c->argv, c->argc, duration);  //判断是否到写到 慢日志里
+
     // 更新命令的统计信息
     if (flags & REDIS_CALL_STATS) {
         c->cmd->microseconds += duration;
@@ -2620,7 +2621,7 @@ void call(redisClient *c, int flags) {
             flags |= (REDIS_PROPAGATE_REPL | REDIS_PROPAGATE_AOF);
 
         if (flags != REDIS_PROPAGATE_NONE)
-            propagate(c->cmd, c->db->id, c->argv, c->argc, flags);  //传播命令给slave
+            propagate(c->cmd, c->db->id, c->argv, c->argc, flags);  //传播命令给aof缓存 以及 给slave
     }
 
     /* Restore the old FORCE_AOF/REPL flags, since call can be executed

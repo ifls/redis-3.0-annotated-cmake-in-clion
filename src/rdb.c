@@ -1027,7 +1027,7 @@ int rdbSave(char *filename) {
     /* Make sure data will not remain on the OS's output buffers */
     // 冲洗缓存,确保数据已写入磁盘
     if (fflush(fp) == EOF) goto werr;
-    if (fsync(fileno(fp)) == -1) goto werr;
+    if (fsync(fileno(fp)) == -1) goto werr;  //写入磁盘
     if (fclose(fp) == EOF) goto werr;
 
     /* Use RENAME to make sure the DB file is changed atomically only
@@ -1084,7 +1084,7 @@ int rdbSaveBackground(char *filename) {
     // fork() 开始前的时间,记录 fork() 返回耗时用
     start = ustime();
 
-    if ((childpid = fork()) == 0) {
+    if ((childpid = fork()) == 0) { //创建子进程
         int retval;
 
         /* Child */

@@ -441,7 +441,7 @@ void flushAppendOnlyFile(int force) {
      */
     // 将 aof缓存 写入 aof文件
     nwritten = write(server.aof_fd, server.aof_buf, sdslen(server.aof_buf));
-    if (nwritten != (signed) sdslen(server.aof_buf)) {
+    if (nwritten != (signed) sdslen(server.aof_buf)) { // 没写完，或者失败了
 
         static time_t last_write_error_log = 0;
         int can_log = 0;
@@ -455,19 +455,19 @@ void flushAppendOnlyFile(int force) {
 
         /* Lof the AOF write error and record the error code. */
         // 如果写入出错,那么尝试将该情况写入到日志里面
-        if (nwritten == -1) {
+        if (nwritten == -1) { //出错了
             if (can_log) {
                 redisLog(REDIS_WARNING, "Error writing to the AOF file: %s", strerror(errno));
                 server.aof_last_write_errno = errno;
             }
-        } else {
+        } else { //半写
             if (can_log) {
                 redisLog(REDIS_WARNING, "Short write while writing to "
                                         "the AOF file: (nwritten=%lld, "
                                         "expected=%lld)", (long long) nwritten, (long long) sdslen(server.aof_buf));
             }
 
-            // 尝试移除新追加的不完整内容
+            // 尝试移除新追加的不完整内容，以便下次重试
             if (ftruncate(server.aof_fd, server.aof_current_size) == -1) {
                 if (can_log) {
                     redisLog(REDIS_WARNING, "Could not remove short write "
@@ -475,12 +475,13 @@ void flushAppendOnlyFile(int force) {
                                             "to load the AOF the next time it starts.  "
                                             "ftruncate: %s", strerror(errno));
                 }
-            } else {
+                //如果 移除失败，说明前半部分已经写入，下面会截取aof_buf已经写入的部分
+            } else { //移除成功
                 /* If the ftrunacate() succeeded we can set nwritten to
                  * -1 since there is no longer partial data into the AOF. */
                 nwritten = -1;
             }
-            server.aof_last_write_errno = ENOSPC;
+            server.aof_last_write_errno = ENOSPC;  // 没有
         }
 
         /* Handle the AOF write error. */
@@ -492,7 +493,7 @@ void flushAppendOnlyFile(int force) {
              * is synched on disk. */
             redisLog(REDIS_WARNING,
                      "Can't recover from AOF write error when the AOF fsync policy is 'always'. Exiting...");
-            exit(1);
+            exit(1);  //退出进程
         } else {
             /* Recover from failed write leaving data into the buffer. However
              * set an error to stop accepting writes as long as the error
@@ -547,10 +548,11 @@ void flushAppendOnlyFile(int force) {
 
     /* Perform the fsync if needed. */
 
-    // 总是执行 fsnyc 立刻同步数据
+    // 总是执行 fsnyc 立刻同步数据到磁盘
     if (server.aof_fsync == AOF_FSYNC_ALWAYS) {
         /* aof_fsync is defined as fdatasync() for Linux in order to avoid
          * flushing metadata. */
+        //写到磁盘
         aof_fsync(server.aof_fd); /* Let's try to get this data on the disk */
 
         // 更新最后一次执行 fsnyc 的时间
@@ -669,7 +671,7 @@ sds catAppendOnlyExpireAtCommand(sds buf, struct redisCommand *cmd, robj *key, r
 }
 
 /*
- * 将命令追加到 AOF 文件中,
+ * 将命令追加到 AOF 缓存中, 之后再写入aof文件
  * 如果 AOF 重写正在进行,那么也将命令追加到 AOF 重写缓存中.
  */
 void feedAppendOnlyFile(struct redisCommand *cmd, int dictid, robj **argv, int argc) {
@@ -720,6 +722,7 @@ void feedAppendOnlyFile(struct redisCommand *cmd, int dictid, robj **argv, int a
         /* All the other commands don't need translation or need the
          * same translation already operated in the command vector
          * for the replication itself. */
+        // 将命令 字符串 整理放到buf
         buf = catAppendOnlyGenericCommand(buf, argc, argv);
     }
 

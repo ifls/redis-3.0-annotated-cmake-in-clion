@@ -1361,8 +1361,8 @@ struct redisCommand {
     int keystep;  /* The step between first and last key */
 
     // 统计信息
-    // microseconds 记录了命令执行耗费的总毫微秒数
-    // calls 是命令被执行的总次数
+    // microseconds 记录了此命令执行耗费的总毫微秒数
+    // calls 是此命令被执行的总次数
     long long microseconds, calls;
 };
 
