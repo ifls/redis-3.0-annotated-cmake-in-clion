@@ -1620,10 +1620,13 @@ int clientsArePaused(void);
 int processEventsWhileBlocked(void);
 
 #ifdef __GNUC__
+
 void addReplyErrorFormat(redisClient *c, const char *fmt, ...)
-    __attribute__((format(printf, 2, 3)));
+__attribute__((format(printf, 2, 3)));
+
 void addReplyStatusFormat(redisClient *c, const char *fmt, ...)
-    __attribute__((format(printf, 2, 3)));
+__attribute__((format(printf, 2, 3)));
+
 #else
 
 void addReplyErrorFormat(redisClient *c, const char *fmt, ...);
@@ -1908,8 +1911,10 @@ void forceCommandPropagation(redisClient *c, int flags);
 int prepareForShutdown();
 
 #ifdef __GNUC__
+
 void redisLog(int level, const char *fmt, ...)
-    __attribute__((format(printf, 2, 3)));
+__attribute__((format(printf, 2, 3)));
+
 #else
 
 void redisLog(int level, const char *fmt, ...);
@@ -2452,10 +2457,15 @@ void pfmergeCommand(redisClient *c);
 void pfdebugCommand(redisClient *c);
 
 #if defined(__GNUC__)
+
 void *calloc(size_t count, size_t size) __attribute__ ((deprecated));
+
 void free(void *ptr) __attribute__ ((deprecated));
+
 void *malloc(size_t size) __attribute__ ((deprecated));
+
 void *realloc(void *ptr, size_t size) __attribute__ ((deprecated));
+
 #endif
 
 /* Debugging stuff */

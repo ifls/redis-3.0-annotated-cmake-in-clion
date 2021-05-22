@@ -46,7 +46,7 @@ static struct {
                              {"local5", LOG_LOCAL5},
                              {"local6", LOG_LOCAL6},
                              {"local7", LOG_LOCAL7},
-                             {NULL,     0}};
+                             {NULL, 0}};
 
 clientBufferLimitsConfig clientBufferLimitsDefaults[REDIS_CLIENT_LIMIT_NUM_CLASSES] = {{0,                 0,  0}, /* normal */
                                                                                        {1024 * 1024 * 256, 1024 * 1024 *
@@ -1461,7 +1461,7 @@ void rewriteConfigEnumOption(struct rewriteConfigState *state, char *option, int
     int enum_val, def_val, force;
     sds line;
 
-            va_start(ap, value);
+    va_start(ap, value);
     while (1) {
         enum_name = va_arg(ap, char*);
         enum_val = va_arg(ap, int);
@@ -1471,7 +1471,7 @@ void rewriteConfigEnumOption(struct rewriteConfigState *state, char *option, int
         }
         if (value == enum_val) matching_name = enum_name;
     }
-            va_end(ap);
+    va_end(ap);
 
     force = value != def_val;
     line = sdscatprintf(sdsempty(), "%s %s", option, matching_name);

@@ -9,7 +9,7 @@
 void getCallback(redisAsyncContext *c, void *r, void *privdata) {
     redisReply *reply = r;
     if (reply == NULL) return;
-    printf("argv[%s]: %s\n", (char*)privdata, reply->str);
+    printf("argv[%s]: %s\n", (char *) privdata, reply->str);
 
     /* Disconnect after receiving the reply to GET */
     redisAsyncDisconnect(c);
@@ -31,7 +31,7 @@ void disconnectCallback(const redisAsyncContext *c, int status) {
     printf("Disconnected...\n");
 }
 
-int main (int argc, char **argv) {
+int main(int argc, char **argv) {
     signal(SIGPIPE, SIG_IGN);
 
     redisAsyncContext *c = redisAsyncConnect("127.0.0.1", 6379);
@@ -42,10 +42,10 @@ int main (int argc, char **argv) {
     }
 
     redisLibevAttach(EV_DEFAULT_ c);
-    redisAsyncSetConnectCallback(c,connectCallback);
-    redisAsyncSetDisconnectCallback(c,disconnectCallback);
-    redisAsyncCommand(c, NULL, NULL, "SET key %b", argv[argc-1], strlen(argv[argc-1]));
-    redisAsyncCommand(c, getCallback, (char*)"end-1", "GET key");
+    redisAsyncSetConnectCallback(c, connectCallback);
+    redisAsyncSetDisconnectCallback(c, disconnectCallback);
+    redisAsyncCommand(c, NULL, NULL, "SET key %b", argv[argc - 1], strlen(argv[argc - 1]));
+    redisAsyncCommand(c, getCallback, (char *) "end-1", "GET key");
     ev_loop(EV_DEFAULT_ 0);
     return 0;
 }

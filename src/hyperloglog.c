@@ -401,7 +401,7 @@ uint64_t MurmurHash64A(const void *key, int len, unsigned int seed) {
         uint64_t k;
 
 #if (BYTE_ORDER == LITTLE_ENDIAN)
-        k = *((uint64_t*)data);
+        k = *((uint64_t *) data);
 #else
         k = (uint64_t) data[0];
         k |= (uint64_t) data[1] << 8;

@@ -35,10 +35,12 @@
 #include <signal.h>
 
 #ifdef HAVE_BACKTRACE
+
 #include <execinfo.h>
 #include <ucontext.h>
 #include <fcntl.h>
 #include "bio.h"
+
 #endif /* HAVE_BACKTRACE */
 
 /* ================================= Debugging ============================== */
@@ -398,7 +400,7 @@ void _redisAssert(char *estr, char *file, int line) {
     server.assert_failed = estr;
     server.assert_file = file;
     server.assert_line = line;
-    redisLog(REDIS_WARNING,"(forcing SIGSEGV to print the bug report.)");
+    redisLog(REDIS_WARNING, "(forcing SIGSEGV to print the bug report.)");
 #endif
     *((char *) -1) = 'x';
 }
@@ -467,7 +469,7 @@ void _redisPanic(char *msg, char *file, int line) {
     redisLog(REDIS_WARNING, "!!! Software Failure. Press left mouse button to continue");
     redisLog(REDIS_WARNING, "Guru Meditation: %s #%s:%d", msg, file, line);
 #ifdef HAVE_BACKTRACE
-    redisLog(REDIS_WARNING,"(forcing SIGSEGV in order to print the stack trace)");
+    redisLog(REDIS_WARNING, "(forcing SIGSEGV in order to print the stack trace)");
 #endif
     redisLog(REDIS_WARNING, "------------------------------------------------");
     *((char *) -1) = 'x';
@@ -481,6 +483,7 @@ void bugReportStart(void) {
 }
 
 #ifdef HAVE_BACKTRACE
+
 static void *getMcontextEip(ucontext_t *uc) {
 #if defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_6)
     /* OSX < 10.6 */
@@ -494,7 +497,7 @@ static void *getMcontextEip(ucontext_t *uc) {
 #elif defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_6)
     /* OSX >= 10.6 */
 #if defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__)
-    return (void*) uc->uc_mcontext->__ss.__rip;
+    return (void *) uc->uc_mcontext->__ss.__rip;
 #else
     return (void*) uc->uc_mcontext->__ss.__eip;
 #endif
@@ -515,7 +518,7 @@ static void *getMcontextEip(ucontext_t *uc) {
 void logStackContent(void **sp) {
     int i;
     for (i = 15; i >= 0; i--) {
-        unsigned long addr = (unsigned long) sp+i;
+        unsigned long addr = (unsigned long) sp + i;
         unsigned long val = (unsigned long) sp[i];
 
         if (sizeof(long) == 4)
@@ -530,38 +533,38 @@ void logRegisters(ucontext_t *uc) {
 
 /* OSX */
 #if defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_6)
-  /* OSX AMD64 */
+    /* OSX AMD64 */
 #if defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__)
     redisLog(REDIS_WARNING,
-    "\n"
-    "RAX:%016lx RBX:%016lx\nRCX:%016lx RDX:%016lx\n"
-    "RDI:%016lx RSI:%016lx\nRBP:%016lx RSP:%016lx\n"
-    "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
-    "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
-    "RIP:%016lx EFL:%016lx\nCS :%016lx FS:%016lx  GS:%016lx",
-        (unsigned long) uc->uc_mcontext->__ss.__rax,
-        (unsigned long) uc->uc_mcontext->__ss.__rbx,
-        (unsigned long) uc->uc_mcontext->__ss.__rcx,
-        (unsigned long) uc->uc_mcontext->__ss.__rdx,
-        (unsigned long) uc->uc_mcontext->__ss.__rdi,
-        (unsigned long) uc->uc_mcontext->__ss.__rsi,
-        (unsigned long) uc->uc_mcontext->__ss.__rbp,
-        (unsigned long) uc->uc_mcontext->__ss.__rsp,
-        (unsigned long) uc->uc_mcontext->__ss.__r8,
-        (unsigned long) uc->uc_mcontext->__ss.__r9,
-        (unsigned long) uc->uc_mcontext->__ss.__r10,
-        (unsigned long) uc->uc_mcontext->__ss.__r11,
-        (unsigned long) uc->uc_mcontext->__ss.__r12,
-        (unsigned long) uc->uc_mcontext->__ss.__r13,
-        (unsigned long) uc->uc_mcontext->__ss.__r14,
-        (unsigned long) uc->uc_mcontext->__ss.__r15,
-        (unsigned long) uc->uc_mcontext->__ss.__rip,
-        (unsigned long) uc->uc_mcontext->__ss.__rflags,
-        (unsigned long) uc->uc_mcontext->__ss.__cs,
-        (unsigned long) uc->uc_mcontext->__ss.__fs,
-        (unsigned long) uc->uc_mcontext->__ss.__gs
+             "\n"
+             "RAX:%016lx RBX:%016lx\nRCX:%016lx RDX:%016lx\n"
+             "RDI:%016lx RSI:%016lx\nRBP:%016lx RSP:%016lx\n"
+             "R8 :%016lx R9 :%016lx\nR10:%016lx R11:%016lx\n"
+             "R12:%016lx R13:%016lx\nR14:%016lx R15:%016lx\n"
+             "RIP:%016lx EFL:%016lx\nCS :%016lx FS:%016lx  GS:%016lx",
+             (unsigned long) uc->uc_mcontext->__ss.__rax,
+             (unsigned long) uc->uc_mcontext->__ss.__rbx,
+             (unsigned long) uc->uc_mcontext->__ss.__rcx,
+             (unsigned long) uc->uc_mcontext->__ss.__rdx,
+             (unsigned long) uc->uc_mcontext->__ss.__rdi,
+             (unsigned long) uc->uc_mcontext->__ss.__rsi,
+             (unsigned long) uc->uc_mcontext->__ss.__rbp,
+             (unsigned long) uc->uc_mcontext->__ss.__rsp,
+             (unsigned long) uc->uc_mcontext->__ss.__r8,
+             (unsigned long) uc->uc_mcontext->__ss.__r9,
+             (unsigned long) uc->uc_mcontext->__ss.__r10,
+             (unsigned long) uc->uc_mcontext->__ss.__r11,
+             (unsigned long) uc->uc_mcontext->__ss.__r12,
+             (unsigned long) uc->uc_mcontext->__ss.__r13,
+             (unsigned long) uc->uc_mcontext->__ss.__r14,
+             (unsigned long) uc->uc_mcontext->__ss.__r15,
+             (unsigned long) uc->uc_mcontext->__ss.__rip,
+             (unsigned long) uc->uc_mcontext->__ss.__rflags,
+             (unsigned long) uc->uc_mcontext->__ss.__cs,
+             (unsigned long) uc->uc_mcontext->__ss.__fs,
+             (unsigned long) uc->uc_mcontext->__ss.__gs
     );
-    logStackContent((void**)uc->uc_mcontext->__ss.__rsp);
+    logStackContent((void **) uc->uc_mcontext->__ss.__rsp);
 #else
     /* OSX x86 */
     redisLog(REDIS_WARNING,
@@ -663,8 +666,8 @@ void logStackTrace(ucontext_t *uc) {
 
     /* Open the log file in append mode. */
     fd = log_to_stdout ?
-        STDOUT_FILENO :
-        open(server.logfile, O_APPEND|O_CREAT|O_WRONLY, 0644);
+         STDOUT_FILENO :
+         open(server.logfile, O_APPEND | O_CREAT | O_WRONLY, 0644);
     if (fd == -1) return;
 
     /* Generate the stack trace */
@@ -692,14 +695,14 @@ void logCurrentClient(void) {
     int j;
 
     redisLog(REDIS_WARNING, "--- CURRENT CLIENT INFO");
-    client = catClientInfoString(sdsempty(),cc);
-    redisLog(REDIS_WARNING,"client: %s", client);
+    client = catClientInfoString(sdsempty(), cc);
+    redisLog(REDIS_WARNING, "client: %s", client);
     sdsfree(client);
     for (j = 0; j < cc->argc; j++) {
         robj *decoded;
 
         decoded = getDecodedObject(cc->argv[j]);
-        redisLog(REDIS_WARNING,"argv[%d]: '%s'", j, (char*)decoded->ptr);
+        redisLog(REDIS_WARNING, "argv[%d]: '%s'", j, (char *) decoded->ptr);
         decrRefCount(decoded);
     }
     /* Check if the first argument, usually a key, is found inside the
@@ -712,7 +715,7 @@ void logCurrentClient(void) {
         de = dictFind(cc->db->dict, key->ptr);
         if (de) {
             val = dictGetVal(de);
-            redisLog(REDIS_WARNING,"key '%s' found in DB containing the following object:", (char*)key->ptr);
+            redisLog(REDIS_WARNING, "key '%s' found in DB containing the following object:", (char *) key->ptr);
             redisLogObjectDebugInfo(val);
         }
         decrRefCount(key);
@@ -803,17 +806,17 @@ int memtest_test_linux_anonymous_maps(void) {
 #endif
 
 void sigsegvHandler(int sig, siginfo_t *info, void *secret) {
-    ucontext_t *uc = (ucontext_t*) secret;
+    ucontext_t *uc = (ucontext_t *) secret;
     sds infostring, clients;
     struct sigaction act;
     REDIS_NOTUSED(info);
 
     bugReportStart();
     redisLog(REDIS_WARNING,
-        "    Redis %s crashed by signal: %d", REDIS_VERSION, sig);
+             "    Redis %s crashed by signal: %d", REDIS_VERSION, sig);
     redisLog(REDIS_WARNING,
-        "    Failed assertion: %s (%s:%d)", server.assert_failed,
-                        server.assert_file, server.assert_line);
+             "    Failed assertion: %s (%s:%d)", server.assert_failed,
+             server.assert_file, server.assert_line);
 
     /* Log the stack trace */
     redisLog(REDIS_WARNING, "--- STACK TRACE");
@@ -823,7 +826,7 @@ void sigsegvHandler(int sig, siginfo_t *info, void *secret) {
     redisLog(REDIS_WARNING, "--- INFO OUTPUT");
     infostring = genRedisInfoString("all");
     infostring = sdscatprintf(infostring, "hash_init_value: %u\n",
-        dictGetHashFunctionSeed());
+                              dictGetHashFunctionSeed());
     redisLogRaw(REDIS_WARNING, infostring);
     redisLog(REDIS_WARNING, "--- CLIENT LIST OUTPUT");
     clients = getAllClientsInfoString();
@@ -851,11 +854,11 @@ void sigsegvHandler(int sig, siginfo_t *info, void *secret) {
 #endif
 
     redisLog(REDIS_WARNING,
-"\n=== REDIS BUG REPORT END. Make sure to include from START to END. ===\n\n"
-"       Please report the crash opening an issue on github:\n\n"
-"           http://github.com/antirez/redis/issues\n\n"
-"  Suspect RAM error? Use redis-server --test-memory to veryfy it.\n\n"
-);
+             "\n=== REDIS BUG REPORT END. Make sure to include from START to END. ===\n\n"
+             "       Please report the crash opening an issue on github:\n\n"
+             "           http://github.com/antirez/redis/issues\n\n"
+             "  Suspect RAM error? Use redis-server --test-memory to veryfy it.\n\n"
+    );
     /* free(messages); Don't call free() with possibly corrupted memory. */
     if (server.daemonize) unlink(server.pidfile);
 
@@ -864,9 +867,10 @@ void sigsegvHandler(int sig, siginfo_t *info, void *secret) {
     sigemptyset (&act.sa_mask);
     act.sa_flags = SA_NODEFER | SA_ONSTACK | SA_RESETHAND;
     act.sa_handler = SIG_DFL;
-    sigaction (sig, &act, NULL);
-    kill(getpid(),sig);
+    sigaction(sig, &act, NULL);
+    kill(getpid(), sig);
 }
+
 #endif /* HAVE_BACKTRACE */
 
 /* ==================== Logging functions for debugging ===================== */
@@ -898,7 +902,7 @@ void redisLogHexDump(int level, char *descr, void *value, size_t len) {
 
 void watchdogSignalHandler(int sig, siginfo_t *info, void *secret) {
 #ifdef HAVE_BACKTRACE
-    ucontext_t *uc = (ucontext_t*) secret;
+    ucontext_t *uc = (ucontext_t *) secret;
 #endif
     REDIS_NOTUSED(info);
     REDIS_NOTUSED(sig);

@@ -117,8 +117,10 @@ sds sdscpy(sds s, const char *t);
 sds sdscatvprintf(sds s, const char *fmt, va_list ap);
 
 #ifdef __GNUC__
+
 sds sdscatprintf(sds s, const char *fmt, ...)
-    __attribute__((format(printf, 2, 3)));
+__attribute__((format(printf, 2, 3)));
+
 #else
 
 sds sdscatprintf(sds s, const char *fmt, ...);

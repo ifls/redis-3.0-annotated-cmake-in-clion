@@ -54,9 +54,9 @@ static void anetSetError(char *err, const char *fmt, ...) {
     va_list ap;
 
     if (!err) return;
-            va_start(ap, fmt);
+    va_start(ap, fmt);
     vsnprintf(err, ANET_ERR_LEN, fmt, ap);
-            va_end(ap);
+    va_end(ap);
 }
 
 /*
@@ -414,7 +414,7 @@ int anetWrite(int fd, char *buf, int count) {
  */
 static int anetListen(char *err, int s, struct sockaddr *sa, socklen_t len, int backlog) {
     // 绑定地址
-    if (bind(s,sa,len) == -1) {
+    if (bind(s, sa, len) == -1) {
         anetSetError(err, "bind: %s", strerror(errno));
         close(s);
         return ANET_ERR;
@@ -456,13 +456,13 @@ static int _anetTcpServer(char *err, int port, char *bindaddr, int af, int backl
     }
     for (p = servinfo; p != NULL; p = p->ai_next) {
         // 创建 socket
-        if ((s = socket(p->ai_family,p->ai_socktype,p->ai_protocol)) == -1)
+        if ((s = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
             continue;
 
-        if (af == AF_INET6 && anetV6Only(err,s) == ANET_ERR) goto error;
-        if (anetSetReuseAddr(err,s) == ANET_ERR) goto error;
+        if (af == AF_INET6 && anetV6Only(err, s) == ANET_ERR) goto error;
+        if (anetSetReuseAddr(err, s) == ANET_ERR) goto error;
         // 绑定和监听
-        if (anetListen(err,s,p->ai_addr,p->ai_addrlen,backlog) == ANET_ERR) goto error;
+        if (anetListen(err, s, p->ai_addr, p->ai_addrlen, backlog) == ANET_ERR) goto error;
         goto end;
     }
     if (p == NULL) {
@@ -507,9 +507,9 @@ int anetUnixServer(char *err, char *path, mode_t perm, int backlog) {
 
 static int anetGenericAccept(char *err, int s, struct sockaddr *sa, socklen_t *len) {
     int fd;
-    while(1) {
+    while (1) {
         //连接进来的地方
-        fd = accept(s,sa,len);
+        fd = accept(s, sa, len);
         fprintf(stderr, "accept new connect: fd=%d, errno=%d\n", fd, errno);
         if (fd == -1) {
             if (errno == EINTR)

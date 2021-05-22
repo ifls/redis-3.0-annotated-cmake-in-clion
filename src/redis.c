@@ -565,9 +565,9 @@ void redisLog(int level, const char *fmt, ...) {
 
     if ((level & 0xff) < server.verbosity) return;
 
-            va_start(ap, fmt);
+    va_start(ap, fmt);
     vsnprintf(msg, sizeof(msg), fmt, ap);
-            va_end(ap);
+    va_end(ap);
 
     redisLogRaw(level, msg);
 }
@@ -2199,7 +2199,7 @@ void initServer() {
     /* Open the TCP listening socket for the user commands. */
     // listenToPort 启动服务器 打开 TCP 监听端口，用于等待客户端的命令请求
     if (server.port != 0 &&
-        listenToPort(server.port,server.ipfd,&server.ipfd_count) == REDIS_ERR)
+        listenToPort(server.port, server.ipfd, &server.ipfd_count) == REDIS_ERR)
         exit(1);
 
     /* Open the listening Unix domain socket. */
@@ -3112,9 +3112,9 @@ sds genRedisInfoString(char *section) {
                             strtol(redisGitDirty(), NULL, 10) > 0, (unsigned long long) redisBuildId(), mode,
                             name.sysname, name.release, name.machine, server.arch_bits, aeGetApiName(),
 #ifdef __GNUC__
-                __GNUC__,__GNUC_MINOR__,__GNUC_PATCHLEVEL__,
+                            __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__,
 #else
-                            0, 0, 0,
+                0, 0, 0,
 #endif
                             (long) getpid(), server.runid, server.port, (intmax_t) uptime,
                             (intmax_t) (uptime / (3600 * 24)), server.hz, (unsigned long) server.lruclock,
@@ -3919,10 +3919,10 @@ void redisSetProcTitle(char *title) {
     else if (server.sentinel_mode) server_mode = " [sentinel]";
 
     setproctitle("%s %s:%d%s",
-        title,
-        server.bindaddr_count ? server.bindaddr[0] : "*",
-        server.port,
-        server_mode);
+                 title,
+                 server.bindaddr_count ? server.bindaddr[0] : "*",
+                 server.port,
+                 server_mode);
 #else
     REDIS_NOTUSED(title);
 #endif
@@ -4080,7 +4080,7 @@ int main(int argc, char **argv) {
     }
 
     // 运行事件处理器，一直到服务器关闭为止
-    aeSetBeforeSleepProc(server.el,beforeSleep);  // 会 执行 aof 写入日志
+    aeSetBeforeSleepProc(server.el, beforeSleep);  // 会 执行 aof 写入日志
     // 事件主循环
     aeMain(server.el);  // 1
 

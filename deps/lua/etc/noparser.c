@@ -18,17 +18,17 @@
 #include "lparser.h"
 #include "lzio.h"
 
-LUAI_FUNC void luaX_init (lua_State *L) {
-  UNUSED(L);
+LUAI_FUNC void luaX_init(lua_State *L) {
+    UNUSED(L);
 }
 
-LUAI_FUNC Proto *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff, const char *name) {
-  UNUSED(z);
-  UNUSED(buff);
-  UNUSED(name);
-  lua_pushliteral(L,"parser not loaded");
-  lua_error(L);
-  return NULL;
+LUAI_FUNC Proto *luaY_parser(lua_State *L, ZIO *z, Mbuffer *buff, const char *name) {
+    UNUSED(z);
+    UNUSED(buff);
+    UNUSED(name);
+    lua_pushliteral(L, "parser not loaded");
+    lua_error(L);
+    return NULL;
 }
 
 #ifdef NODUMP

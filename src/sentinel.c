@@ -847,20 +847,20 @@ void sentinelEvent(int level, char *type, sentinelRedisInstance *ri, const char 
             // ri 不是主服务器
 
             snprintf(msg, sizeof(msg), "%s %s %s %d @ %s %s %d",
-                    // 打印 ri 的类型
+            // 打印 ri 的类型
                      sentinelRedisInstanceTypeStr(ri),
-                    // 打印 ri 的名字、IP 和端口号
+            // 打印 ri 的名字、IP 和端口号
                      ri->name, ri->addr->ip, ri->addr->port,
-                    // 打印 ri 的主服务器的名字、 IP 和端口号
+            // 打印 ri 的主服务器的名字、 IP 和端口号
                      master->name, master->addr->ip, master->addr->port);
         } else {
 
             // ri 是主服务器
 
             snprintf(msg, sizeof(msg), "%s %s %s %d",
-                    // 打印 ri 的类型
+            // 打印 ri 的类型
                      sentinelRedisInstanceTypeStr(ri),
-                    // 打印 ri 的名字、IP 和端口号
+            // 打印 ri 的名字、IP 和端口号
                      ri->name, ri->addr->ip, ri->addr->port);
         }
 
@@ -874,9 +874,9 @@ void sentinelEvent(int level, char *type, sentinelRedisInstance *ri, const char 
     /* Use vsprintf for the rest of the formatting if any. */
     // 打印之后的内容,格式和平常的 printf 一样
     if (fmt[0] != '\0') {
-                va_start(ap, fmt);
+        va_start(ap, fmt);
         vsnprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), fmt, ap);
-                va_end(ap);
+        va_end(ap);
     }
 
     /* Log the message if the log level allows it to be logged. */
@@ -946,14 +946,14 @@ void sentinelScheduleScriptExecution(char *path, ...) {
     sentinelScriptJob *sj;
 
     // 生成参数
-            va_start(ap, path);
+    va_start(ap, path);
     while (argc < SENTINEL_SCRIPT_MAX_ARGS) {
         argv[argc] = va_arg(ap, char*);
         if (!argv[argc]) break;
         argv[argc] = sdsnew(argv[argc]); /* Copy the string. */
         argc++;
     }
-            va_end(ap);
+    va_end(ap);
     argv[0] = sdsnew(path);
 
     // 初始化脚本结构
@@ -2911,7 +2911,7 @@ int sentinelSendHello(sentinelRedisInstance *ri) {
     snprintf(payload, sizeof(payload), "%s,%d,%s,%llu," /* Info about this sentinel. */
                                        "%s,%s,%d,%llu", /* Info about current master. */
              ip, server.port, server.runid, (unsigned long long) sentinel.current_epoch,
-            /* --- */
+    /* --- */
              master->name, master_addr->ip, master_addr->port, (unsigned long long) master->config_epoch);
 
     // 发送信息

@@ -1117,7 +1117,7 @@ char *sendSynchronousCommand(int fd, ...) {
 
     /* Create the command to send to the master, we use simple inline
      * protocol for simplicity as currently we only send simple strings. */
-            va_start(ap, fd);
+    va_start(ap, fd);
     while (1) {
         arg = va_arg(ap, char*);
         if (arg == NULL) break;

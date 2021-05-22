@@ -698,10 +698,10 @@ sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
 sds sdscatprintf(sds s, const char *fmt, ...) {
     va_list ap;
     char *t;
-            va_start(ap, fmt);
+    va_start(ap, fmt);
     // T = O(N^2)
     t = sdscatvprintf(s, fmt, ap);
-            va_end(ap);
+    va_end(ap);
     return t;
 }
 
@@ -728,7 +728,7 @@ sds sdscatfmt(sds s, char const *fmt, ...) {
     int i;
     va_list ap;
 
-            va_start(ap, fmt);
+    va_start(ap, fmt);
     f = fmt;    /* Next format specifier byte to process. */
     i = initlen; /* Position of the next byte to write to dest str. */
     while (*f) {
@@ -814,7 +814,7 @@ sds sdscatfmt(sds s, char const *fmt, ...) {
         }
         f++;
     }
-            va_end(ap);
+    va_end(ap);
 
     /* Add null-term */
     s[i] = '\0';

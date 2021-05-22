@@ -53,7 +53,9 @@
 #include "ae_epoll.c"
 #else
 #ifdef HAVE_KQUEUE
+
 #include "ae_kqueue.c"
+
 #else
 
 #include "ae_select.c"
@@ -487,8 +489,7 @@ static int processTimeEvents(aeEventLoop *eventLoop) {
  * 函数的返回值为已处理事件的数量
  */
 // 处理事件
-int aeProcessEvents(aeEventLoop *eventLoop, int flags)
-{
+int aeProcessEvents(aeEventLoop *eventLoop, int flags) {
     int processed = 0, numevents;
 
     /* Nothing to do? return ASAP */
@@ -564,7 +565,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
             if (fe->mask & mask & AE_READABLE) {
                 // rfired 确保读/写事件只能执行其中一个
                 rfired = 1;
-                fe->rfileProc(eventLoop,fd,fe->clientData,mask);  //3 readQueryFromClient()
+                fe->rfileProc(eventLoop, fd, fe->clientData, mask);  //3 readQueryFromClient()
             }
             // 写事件
             if (fe->mask & mask & AE_WRITABLE) {

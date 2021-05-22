@@ -55,7 +55,7 @@ static struct {
     /* title space available */
     char *base, *end;
 
-     /* pointer to original nul character within base */
+    /* pointer to original nul character within base */
     char *nul;
 
     _Bool reset;
@@ -88,7 +88,7 @@ static int spt_clearenv(void) {
     if (!(tmp = malloc(sizeof *tmp)))
         return errno;
 
-    tmp[0]  = NULL;
+    tmp[0] = NULL;
     environ = tmp;
 
     return 0;
@@ -112,7 +112,7 @@ static int spt_copyenv(char *oldenv[]) {
             continue;
 
         *eq = '\0';
-        error = (0 != setenv(oldenv[i], eq + 1, 1))? errno : 0;
+        error = (0 != setenv(oldenv[i], eq + 1, 1)) ? errno : 0;
         *eq = '=';
 
         if (error)
@@ -120,7 +120,7 @@ static int spt_copyenv(char *oldenv[]) {
     }
 
     return 0;
-error:
+    error:
     environ = oldenv;
 
     return error;
@@ -146,7 +146,7 @@ static int spt_copyargs(int argc, char *argv[]) {
 
 
 void spt_init(int argc, char *argv[]) {
-        char **envp = environ;
+    char **envp = environ;
     char *base, *end, *nul, *tmp;
     int i, error;
 
@@ -197,14 +197,14 @@ void spt_init(int argc, char *argv[]) {
     if ((error = spt_copyargs(argc, argv)))
         goto error;
 
-    SPT.nul  = nul;
+    SPT.nul = nul;
     SPT.base = base;
-    SPT.end  = end;
+    SPT.end = end;
 
     return;
-syerr:
+    syerr:
     error = errno;
-error:
+    error:
     SPT.error = error;
 } /* spt_init() */
 
@@ -230,8 +230,10 @@ void setproctitle(const char *fmt, ...) {
         len = snprintf(buf, sizeof buf, "%s", SPT.arg0);
     }
 
-    if (len <= 0)
-        { error = errno; goto error; }
+    if (len <= 0) {
+        error = errno;
+        goto error;
+    }
 
     if (!SPT.reset) {
         memset(SPT.base, 0, SPT.end - SPT.base);
@@ -252,7 +254,7 @@ void setproctitle(const char *fmt, ...) {
     }
 
     return;
-error:
+    error:
     SPT.error = error;
 } /* setproctitle() */
 

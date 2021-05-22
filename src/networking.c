@@ -498,9 +498,9 @@ void addReplyError(redisClient *c, char *err) {
 void addReplyErrorFormat(redisClient *c, const char *fmt, ...) {
     size_t l, j;
     va_list ap;
-            va_start(ap, fmt);
+    va_start(ap, fmt);
     sds s = sdscatvprintf(sdsempty(), fmt, ap);
-            va_end(ap);
+    va_end(ap);
     /* Make sure there are no newlines in the string, otherwise invalid protocol
      * is emitted. */
     l = sdslen(s);
@@ -528,9 +528,9 @@ void addReplyStatus(redisClient *c, char *status) {
 
 void addReplyStatusFormat(redisClient *c, const char *fmt, ...) {
     va_list ap;
-            va_start(ap, fmt);
+    va_start(ap, fmt);
     sds s = sdscatvprintf(sdsempty(), fmt, ap);
-            va_end(ap);
+    va_end(ap);
     addReplyStatusLength(c, s, sdslen(s));
     sdsfree(s);
 }
@@ -1844,7 +1844,7 @@ void rewriteClientCommandVector(redisClient *c, int argc, ...) {
 
     // 创建新参数
     argv = zmalloc(sizeof(robj *) * argc);
-            va_start(ap, argc);
+    va_start(ap, argc);
     for (j = 0; j < argc; j++) {
         robj *a;
 
@@ -1865,7 +1865,7 @@ void rewriteClientCommandVector(redisClient *c, int argc, ...) {
     c->argc = argc;
     c->cmd = lookupCommandOrOriginal(c->argv[0]->ptr);
     redisAssertWithInfo(c, NULL, c->cmd != NULL);
-            va_end(ap);
+    va_end(ap);
 }
 
 /* Rewrite a single item in the command vector.

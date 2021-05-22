@@ -155,7 +155,7 @@ void *zrealloc(void *ptr, size_t size) {
     if (ptr == NULL) return zmalloc(size);
 #ifdef HAVE_MALLOC_SIZE
     oldsize = zmalloc_size(ptr);
-    newptr = realloc(ptr,size);
+    newptr = realloc(ptr, size);
     if (!newptr) zmalloc_oom_handler(size);
 
     update_zmalloc_stat_free(oldsize);
@@ -291,6 +291,7 @@ size_t zmalloc_get_rss(void) {
     return rss;
 }
 #elif defined(HAVE_TASKINFO)
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -306,10 +307,11 @@ size_t zmalloc_get_rss(void) {
 
     if (task_for_pid(current_task(), getpid(), &task) != KERN_SUCCESS)
         return 0;
-    task_info(task, TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count);
+    task_info(task, TASK_BASIC_INFO, (task_info_t) &t_info, &t_info_count);
 
     return t_info.resident_size;
 }
+
 #else
 
 size_t zmalloc_get_rss(void) {
