@@ -1,4 +1,4 @@
-/* Configuration file parsing and CONFIG GET/SET commands implementation.
+/* Configuration file parsing and CONFIG GET/SET commands implementation.  支持 config命令
  *
  * Copyright (c) 2009-2012, Salvatore Sanfilippo <antirez at gmail dot com>
  * All rights reserved.

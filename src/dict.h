@@ -1,4 +1,4 @@
-/* Hash Tables Implementation.
+/* Hash Tables Implementation. 哈希表的额实现
  *
  * This file implements in-memory hash tables with insert/del/replace/find/
  * get-random-element operations. Hash tables will auto-resize if needed

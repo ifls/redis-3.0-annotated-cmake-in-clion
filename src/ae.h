@@ -1,4 +1,4 @@
-/* A simple event-driven programming library. Originally I wrote this code
+/* A simple event-driven programming library. Originally I wrote this code 事件处理器实现（基于 Reactor 模式）。
  * for the Jim's event-loop (Jim is a Tcl interpreter) but later translated
  * it in form of a library for easy reuse.
  *

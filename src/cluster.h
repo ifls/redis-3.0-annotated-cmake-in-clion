@@ -2,7 +2,7 @@
 #define __REDIS_CLUSTER_H
 
 /*-----------------------------------------------------------------------------
- * Redis cluster data structures, defines, exported API.
+ * Redis cluster data structures, defines, exported API. 集群的实现代码
  *----------------------------------------------------------------------------*/
 
 // 槽数量

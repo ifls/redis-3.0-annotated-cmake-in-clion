@@ -1,4 +1,4 @@
-/* blocked.c - generic support for blocking operations like BLPOP & WAIT.
+/* blocked.c - generic support for blocking operations like BLPOP & WAIT. 配合实现一些命令的 执行阻塞 函数
  *
  * Copyright (c) 2009-2012, Salvatore Sanfilippo <antirez at gmail dot com>
  * All rights reserved.

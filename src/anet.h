@@ -1,4 +1,4 @@
-/* anet.c -- Basic TCP socket stuff made a bit less boring
+/* anet.c -- Basic TCP socket stuff made a bit less boring 主要就是对tcp套接字操作的封装，使它更加符合redis的系统逻辑，同时便于修改
  *
  * Copyright (c) 2006-2012, Salvatore Sanfilippo <antirez at gmail dot com>
  * All rights reserved.

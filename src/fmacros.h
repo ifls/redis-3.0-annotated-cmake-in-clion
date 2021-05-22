@@ -30,6 +30,7 @@
 #ifndef _REDIS_FMACRO_H
 #define _REDIS_FMACRO_H
 
+// 平台相关的宏定义
 #define _BSD_SOURCE
 
 #if defined(__linux__)

@@ -28,7 +28,7 @@
  */
 
 /* Exported API
- * background I/O Redis 的后台 I/O 服务
+ * background I/O Redis 的后台I/O处理
  * */
 // 初始化后台任务系统,生成线程
 void bioInit(void);

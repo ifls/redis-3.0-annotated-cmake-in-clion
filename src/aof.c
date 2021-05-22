@@ -42,7 +42,7 @@
 void aofUpdateCurrentSize(void);
 
 /* ----------------------------------------------------------------------------
- * AOF rewrite buffer implementation.
+ * AOF rewrite buffer implementation. 更新日志实现
  *
  * AOF 重写缓存的实现. Append Only File
  *

@@ -44,7 +44,7 @@
 #endif /* HAVE_BACKTRACE */
 
 /* ================================= Debugging ============================== */
-
+// 调试用的一些函数
 /* Compute the sha1 of string at 's' with 'len' bytes long.
  * The SHA1 is then xored against the string pointed by digest.
  * Since xor is commutative, this operation is used in order to

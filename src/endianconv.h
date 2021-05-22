@@ -1,5 +1,5 @@
 /* See endianconv.c top comments for more information
- *
+ * 大端小端转换函数
  * ----------------------------------------------------------------------------
  *
  * Copyright (c) 2011-2012, Salvatore Sanfilippo <antirez at gmail dot com>

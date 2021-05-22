@@ -1,8 +1,6 @@
 /* ================ sha1.h ================ */
 /*
-SHA-1 in C
-By Steve Reid <steve@edmweb.com>
-100% Public Domain
+SHA-1 in C, 一种hash算法
 */
 
 typedef struct {
