@@ -2147,7 +2147,7 @@ void replicationCron(void) {
 
     /* Check if we should connect to a MASTER */
     // 尝试连接主服务器
-    if (server.repl_state == REDIS_REPL_CONNECT) {
+    if (server.repl_state == REDIS_REPL_CONNECT) {  // 执行slaveof ip port 命令, 就会设置此状态
         redisLog(REDIS_NOTICE, "Connecting to MASTER %s:%d", server.masterhost, server.masterport);
         if (connectWithMaster() == REDIS_OK) {
             redisLog(REDIS_NOTICE, "MASTER <-> SLAVE sync started");

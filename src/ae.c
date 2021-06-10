@@ -161,7 +161,7 @@ int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask, aeFileProc *proc
 
     // 设置文件事件类型,以及事件的处理器
     fe->mask |= mask;
-    if (mask & AE_READABLE) fe->rfileProc = proc;
+    if (mask & AE_READABLE) fe->rfileProc = proc;  // 写读一般都是同一个函数
     if (mask & AE_WRITABLE) fe->wfileProc = proc;
 
     // 私有数据
@@ -536,7 +536,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags) {
               * processed, so we check if the event is still valid. */
             // 先处理, 读事件
             if (fe->mask & mask & AE_READABLE) {
-                // rfired 确保读/写事件只能执行其中一个
+                // rfired 避免重复处理两次
                 rfired = 1;
                 fe->rfileProc(eventLoop, fd, fe->clientData, mask);  //3 readQueryFromClient()
             }

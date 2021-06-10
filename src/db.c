@@ -1151,7 +1151,7 @@ void propagateExpire(redisDb *db, robj *key) {
     if (server.aof_state != REDIS_AOF_OFF)
         feedAppendOnlyFile(server.delCommand, db->id, argv, 2);
 
-    // 传播到所有附属节点
+    // 传播到所有从节点
     replicationFeedSlaves(server.slaves, db->id, argv, 2);
 
     decrRefCount(argv[0]);

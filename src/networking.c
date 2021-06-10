@@ -719,7 +719,7 @@ void copyClientOutputBuffer(redisClient *dst, redisClient *src) {
  * TCP 连接 数据 处理器
  */
 #define MAX_ACCEPTS_PER_CALL 1000
-
+// 创建并添加一个 redis client
 static void acceptCommonHandler(int fd, int flags) {
 
     // 创建客户端

@@ -39,7 +39,7 @@ void aofUpdateCurrentSize(void);
  *
  * ------------------------------------------------------------------------- */
 
-// 每个缓存块的大小
+// 每个缓存块的大小 aof 重写缓冲块大小
 #define AOF_RW_BUF_BLOCK_SIZE (1024*1024*10)    /* 10 MB per block */
 
 typedef struct aofrwblock {
@@ -327,7 +327,7 @@ int startAppendOnly(void) {
 #define AOF_WRITE_LOG_ERROR_RATE 30 /* Seconds between errors logging. */
 
 // force == 1 表示强制
-// 写入 aof文件的入口函数
+// 将aof缓冲 写入 aof文件的 内核缓冲区 的入口函数
 void flushAppendOnlyFile(int force) {
     ssize_t nwritten;
     int sync_in_progress = 0;
@@ -708,7 +708,7 @@ void feedAppendOnlyFile(struct redisCommand *cmd, int dictid, robj **argv, int a
      * 并向客户端返回一个回复.
      */
     if (server.aof_state == REDIS_AOF_ON)
-        server.aof_buf = sdscatlen(server.aof_buf, buf, sdslen(buf));
+        server.aof_buf = sdscatlen(server.aof_buf, buf, sdslen(buf));  // 将执行的命令追加到aof 缓冲区
 
     /* If a background append only file rewriting is in progress we want to
      * accumulate the differences between the child DB and the current one

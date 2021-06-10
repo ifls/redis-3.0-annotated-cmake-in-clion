@@ -1491,7 +1491,7 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     // 服务器进程收到 SIGTERM 信号,关闭服务器
     if (server.shutdown_asap) {
 
-        // 尝试关闭服务器
+        // 尝试关闭服务器, 关闭服务器前会持久化文件
         if (prepareForShutdown(0) == REDIS_OK) exit(0);
 
         // 如果关闭失败,那么打印 LOG ,并移除关闭标识
@@ -1580,7 +1580,7 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
         // 既然没有 BGSAVE 或者 BGREWRITEAOF 在执行,那么检查是否需要执行它们
 
         // 遍历所有保存条件,看是否需要执行 BGSAVE 命令
-        for (j = 0; j < server.saveparamslen; j++) {
+        for (j = 0; j < server.saveparamslen; j++) { // save 的条件可以设置多个
             struct saveparam *sp = server.saveparams + j;
 
             /* Save if we reached the given amount of changes,
@@ -1622,14 +1622,14 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
     // 考虑是否需要将 AOF 缓冲区中的内容写入到 AOF 文件中
     /* AOF postponed flush: Try at every cron cycle if the slow fsync
      * completed. */
-    if (server.aof_flush_postponed_start) flushAppendOnlyFile(0);
+    if (server.aof_flush_postponed_start) flushAppendOnlyFile(0);  // 上次写入文件被延迟, 这里就立刻写入
 
     /* AOF write errors: in this case we have a buffer to flush as well and
      * clear the AOF error in case of success to make the DB writable again,
      * however to try every second is enough in case of 'hz' is set to
      * an higher frequency. */
     run_with_period(1000) {  // 每秒执行一次
-        if (server.aof_last_write_status == REDIS_ERR)
+        if (server.aof_last_write_status == REDIS_ERR) // 上次写失败了, 这次 再写入文件一次
             flushAppendOnlyFile(0);
     }
 
@@ -1673,7 +1673,7 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
 /* This function gets called every time Redis is entering the
  * main loop of the event driven library, that is, before to sleep
  * for ready file descriptors. */
-// 每次处理事件之前执行
+// 每次因io而阻塞之前执行
 void beforeSleep(struct aeEventLoop *eventLoop) {
     REDIS_NOTUSED(eventLoop);
 
@@ -2867,6 +2867,7 @@ void closeListeningSockets(int unlink_unix_socket) {
     }
 }
 
+// 会 持久化aof到磁盘
 int prepareForShutdown(int flags) {
     int save = flags & REDIS_SHUTDOWN_SAVE;
     int nosave = flags & REDIS_SHUTDOWN_NOSAVE;

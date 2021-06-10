@@ -84,7 +84,7 @@ static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {
     // 注册事件到 epoll
     ee.events = 0;
     mask |= eventLoop->events[fd].mask; /* Merge old events */
-    if (mask & AE_READABLE) ee.events |= EPOLLIN;
+    if (mask & AE_READABLE) ee.events |= EPOLLIN;  // 只监听 读写
     if (mask & AE_WRITABLE) ee.events |= EPOLLOUT;
     ee.data.u64 = 0; /* avoid valgrind warning */
     ee.data.fd = fd;
@@ -128,7 +128,7 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
     retval = epoll_wait(state->epfd, state->events, eventLoop->setsize,
                         tvp ? (tvp->tv_sec * 1000 + tvp->tv_usec / 1000) : -1);
 
-    // 有至少一个事件就绪？
+    // 有至少一个事件就绪??
     if (retval > 0) {
         int j;
 
@@ -139,9 +139,9 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
             int mask = 0;
             struct epoll_event *e = state->events + j;
 
-            if (e->events & EPOLLIN) mask |= AE_READABLE;
+            if (e->events & EPOLLIN) mask |= AE_READABLE;  // 注册只注册 IN 和 OUT
             if (e->events & EPOLLOUT) mask |= AE_WRITABLE;
-            if (e->events & EPOLLERR) mask |= AE_WRITABLE;
+            if (e->events & EPOLLERR) mask |= AE_WRITABLE;  // ERR 和 HUP是 默认就有的
             if (e->events & EPOLLHUP) mask |= AE_WRITABLE;
 
             eventLoop->fired[j].fd = e->data.fd;
