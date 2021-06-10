@@ -661,9 +661,9 @@ void hashTypeConvert(robj *o, int enc) {
 /*-----------------------------------------------------------------------------
  * Hash type commands
  *----------------------------------------------------------------------------*/
-// 实际上只支持一对kv, redis4.0才支持多对
+// 实际上只支持一对kv, redis4.0 hset才支持多对
 // -->HSET key field value [field value ...]
-void hsetCommand(redisClient *c) {  // kv kv kv ...
+void hsetCommand(redisClient *c) {  // k v k v k v [k v]...
     int update;
     robj *o;
 
@@ -683,13 +683,13 @@ void hsetCommand(redisClient *c) {  // kv kv kv ...
     // 返回的数值只表示添加的数量
     addReply(c, update ? shared.czero : shared.cone);
 
-    // 发送键修改信号
+    // 发送键修改信号，用于watch命令判定
     signalModifiedKey(c->db, c->argv[1]);
 
     // 发送事件通知
     notifyKeyspaceEvent(REDIS_NOTIFY_HASH, "hset", c->argv[1], c->db->id);
 
-    // 将服务器设为脏
+    // 累加 脏数据数量
     server.dirty++;
 }
 

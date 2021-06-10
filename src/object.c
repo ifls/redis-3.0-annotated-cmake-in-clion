@@ -252,7 +252,7 @@ robj *createIntsetObject(void) {
  */
 robj *createHashObject(void) {
 
-    unsigned char *zl = ziplistNew();
+    unsigned char *zl = ziplistNew();  // 一开始都是压缩链表
 
     robj *o = createObject(REDIS_HASH, zl);
 

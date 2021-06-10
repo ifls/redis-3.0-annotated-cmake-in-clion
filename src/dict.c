@@ -1139,9 +1139,8 @@ static unsigned long rev(unsigned long v) {
  * dictionary from the start to the end of the iteration are returned.
  * However it is possible that some element is returned multiple time.
  *
- * 函数保证,在迭代从开始到结束期间,一直存在于字典的元素肯定会被迭代到,
- * 但一个元素可能会被返回多次.
- *
+ * 函数保证,在迭代从开始到结束期间,一直存在于字典的元素肯定会被迭代到, 但一个元素可能会被返回多次.
+ * 没被删除的元素，一定会被迭代到
  * For every element returned, the callback 'fn' passed as argument is
  * called, with 'privdata' as first argument and the dictionar entry
  * 'de' as second argument.
@@ -1200,7 +1199,7 @@ static unsigned long rev(unsigned long v) {
  *
  * 当对哈希表进行扩展时,元素可能会从一个槽移动到另一个槽,
  * 举个例子,假设我们刚好迭代至 4 位游标 1100 ,
- * 而哈希表的 mask 为 1111 （哈希表的大小为 16 ）.
+ * 而哈希表的 mask 为 1111 （哈希表的大小为 16 ）. 拓展下 就是 01111
  *
  * If the hash table will be resized to 64 elements, and the new mask will
  * be 111111, the new buckets that you obtain substituting in ??1100
@@ -1250,7 +1249,7 @@ static unsigned long rev(unsigned long v) {
  *    为了不错过任何元素,
  *    迭代器需要返回给定桶上的所有键,
  *    以及因为扩展哈希表而产生出来的新表,
- *    所以迭代器必须在一次迭代中返回多个元素.
+ *    所以迭代器 必须 在一次迭代中返回多个元素.
  * 3) The reverse cursor is somewhat hard to understand at first, but this
  *    comment is supposed to help.
  *    对游标进行翻转（reverse）的原因初看上去比较难以理解,
@@ -1275,7 +1274,7 @@ unsigned long dictScan(dict *d, unsigned long v, dictScanFunction *fn, void *pri
         /* Emit entries at cursor */
         // 指向哈希桶
         de = t0->table[v & m0];
-        // 遍历桶中的所有节点
+        // 一次迭代遍历 桶中的所有节点
         while (de) {
             fn(privdata, de);
             de = de->next;
@@ -1320,12 +1319,13 @@ unsigned long dictScan(dict *d, unsigned long v, dictScanFunction *fn, void *pri
                 de = de->next;
             }
 
+            // 参考 https://www.cnblogs.com/linxiyue/p/11262969.html
             /* Increment bits not covered by the smaller mask */
             // 迭代到 特定的某个桶
             v = (((v | m0) + 1) & ~m0) | (v & m0);
 
             /* Continue while bits covered by mask difference is non-zero */
-        } while (v & (m0 ^ m1));
+        } while (v & (m0 ^ m1));  // 说明 老桶和新桶的index 有映射关系
     }
 
     /* Set unmasked bits so incrementing the reversed cursor
