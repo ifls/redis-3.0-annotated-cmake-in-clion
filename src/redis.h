@@ -668,7 +668,7 @@ struct saveparam {
 };
 
 // 通过复用来减少内存碎片,以及减少操作耗时的共享对象
-struct sharedObjectsStruct {
+struct sharedObjectsStruct {  // czero == "0\r\n" cone = "1\r\n"
     robj *crlf, *ok, *err, *emptybulk, *czero, *cone, *cnegone, *pong, *space, *colon, *nullbulk, *nullmultibulk, *queued, *emptymultibulk, *wrongtypeerr, *nokeyerr, *syntaxerr, *sameobjecterr, *outofrangeerr, *noscripterr, *loadingerr, *slowscripterr, *bgsaveerr, *masterdownerr, *roslaveerr, *execaborterr, *noautherr, *noreplicaserr, *busykeyerr, *oomerr, *plus, *messagebulk, *pmessagebulk, *subscribebulk, *unsubscribebulk, *psubscribebulk, *punsubscribebulk, *del, *rpop, *lpop, *lpush, *emptyscan, *minstring, *maxstring, *select[REDIS_SHARED_SELECT_CMDS], *integers[REDIS_SHARED_INTEGERS], *mbulkhdr[REDIS_SHARED_BULKHDR_LEN], /* "*<value>\r\n" */
     *bulkhdr[REDIS_SHARED_BULKHDR_LEN];  /* "$<value>\r\n" */
 };

@@ -160,6 +160,7 @@ static int dictAdd(dict *ht, void *key, void *val) {
 /* Add an element, discarding the old if the key already exists.
  * Return 1 if the key was added from scratch,
  * 0 if there was already an element with such key and dictReplace() just performed a value update operation. */
+// 1表示 添加， 2表示更新
 static int dictReplace(dict *ht, void *key, void *val) {
     dictEntry *entry, auxentry;
 
